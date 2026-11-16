@@ -15,7 +15,9 @@ export function TabScrollView({ children, contentContainerStyle }: TabScrollView
 
   return (
     <ScrollView
+      automaticallyAdjustKeyboardInsets
       contentInsetAdjustmentBehavior="automatic"
+      keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentContainerStyle={[
