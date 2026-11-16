@@ -18,12 +18,12 @@ const styles = StyleSheet.create({
   small: {
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: 500,
+    fontWeight: 400,
   },
   smallBold: {
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: 700,
+    fontWeight: 600,
   },
   default: {
     fontSize: 16,
@@ -31,13 +31,14 @@ const styles = StyleSheet.create({
     fontWeight: 500,
   },
   title: {
-    fontSize: 48,
-    fontWeight: 600,
-    lineHeight: 52,
+    fontSize: 30,
+    fontWeight: 500,
+    lineHeight: 36,
+    letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 32,
-    lineHeight: 44,
+    fontSize: 26,
+    lineHeight: 32,
     fontWeight: 600,
   },
   link: {
