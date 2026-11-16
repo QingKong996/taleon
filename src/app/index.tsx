@@ -1,93 +1,104 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
+import { TabScrollView } from '@/components/tab-scroll-view';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
-function getDevMenuHint() {
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
+const stories = [
+  {
+    id: 'mist-harbor',
+    title: '雾港来信',
+    meta: '悬疑 · 第 12 章',
+    mark: '雾',
+    color: '#9B5D4B',
+  },
+  {
+    id: 'star-traveler',
+    title: '星海旅人',
+    meta: '科幻 · 第 8 章',
+    mark: '星',
+    color: '#456D8A',
+  },
+  {
+    id: 'long-night',
+    title: '长夜将明',
+    meta: '奇幻 · 第 3 章',
+    mark: '夜',
+    color: '#665386',
+  },
+] as const;
+
+export default function StoriesScreen() {
+  const theme = useTheme();
+
+  return (
+    <TabScrollView>
+      <ThemedText type="title">故事</ThemedText>
+
+      <ThemedText type="smallBold" style={styles.sectionLabel}>
+        全部故事
       </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+      <View style={styles.storyList}>
+        {stories.map((story) => (
+          <View
+            key={story.id}
+            style={[
+              styles.storyRow,
+              {
+                backgroundColor: theme.backgroundElement,
+                borderColor: theme.backgroundSelected,
+              },
+            ]}>
+            <View style={[styles.storyCover, { backgroundColor: story.color }]}>
+              <ThemedText style={styles.coverMark}>{story.mark}</ThemedText>
+            </View>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-      </SafeAreaView>
-    </ThemedView>
+            <View style={styles.storyCopy}>
+              <ThemedText type="smallBold">{story.title}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {story.meta}
+              </ThemedText>
+            </View>
+          </View>
+        ))}
+      </View>
+    </TabScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
+  sectionLabel: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  storyList: {
+    gap: 8,
+  },
+  storyRow: {
     flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
     alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    gap: 12,
+    padding: 8,
+    paddingRight: 12,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  heroSection: {
+  storyCover: {
+    width: 42,
+    height: 56,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  coverMark: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: 600,
+  },
+  storyCopy: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    gap: 2,
   },
 });
