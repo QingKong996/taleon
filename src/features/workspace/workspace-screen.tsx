@@ -32,13 +32,15 @@ export function WorkspaceScreen() {
 
       {workbench.step === 1 ? (
         <OutlineStep
+          chapterCount={workbench.chapterCount}
+          chapterRange={workbench.chapterRange}
           idea={workbench.idea}
-          onChangeSummary={workbench.updateChapterSummary}
+          onChangeChapterCount={workbench.changeChapterCount}
+          onChangeChapterRange={workbench.changeChapterRange}
+          onChangeWordsPerChapter={workbench.changeWordsPerChapter}
           onEditIdea={() => workbench.setStep(0)}
-          onGenerateChapter={workbench.generateChapter}
-          onSelectChapter={workbench.setSelectedChapter}
-          selectedChapter={workbench.selectedChapter}
-          summaries={workbench.chapterSummaries}
+          onGenerateChapters={workbench.generateChapters}
+          wordsPerChapter={workbench.wordsPerChapter}
         />
       ) : null}
 

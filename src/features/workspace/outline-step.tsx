@@ -4,47 +4,128 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/form';
-import { SectionHeader } from '@/components/ui/section-header';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
-import { ChapterAccordion } from '@/features/workspace/chapter-accordion';
-import { OUTLINE_CHAPTERS } from '@/features/workspace/workbench-data';
+import {
+  MAX_CHAPTER_COUNT,
+  MAX_WORDS_PER_CHAPTER,
+  MIN_CHAPTER_COUNT,
+  MIN_WORDS_PER_CHAPTER,
+} from '@/features/workspace/workbench-data';
 import { useTheme } from '@/hooks/use-theme';
 
 type OutlineStepProps = {
+  chapterCount: number;
+  chapterRange: [number, number];
   idea: string;
-  onChangeSummary: (index: number, summary: string) => void;
+  onChangeChapterCount: (value: number) => void;
+  onChangeChapterRange: (range: [number, number]) => void;
+  onChangeWordsPerChapter: (value: number) => void;
   onEditIdea: () => void;
-  onGenerateChapter: () => void;
-  onSelectChapter: (index: number) => void;
-  selectedChapter: number;
-  summaries: readonly string[];
+  onGenerateChapters: () => void;
+  wordsPerChapter: number;
 };
 
-export function OutlineStep({
-  idea,
-  onChangeSummary,
-  onEditIdea,
-  onGenerateChapter,
-  onSelectChapter,
-  selectedChapter,
-  summaries,
-}: OutlineStepProps) {
-  const theme = useTheme();
-  const [expandedChapter, setExpandedChapter] = useState<number | null>(
-    selectedChapter,
-  );
+type PlanNumberFieldProps = {
+  label: string;
+  max: number;
+  maxLength: number;
+  min: number;
+  onChange: (value: number) => void;
+  suffix: string;
+  value: number;
+};
 
-  function toggleChapter(index: number) {
-    const isExpanding = expandedChapter !== index;
+function clamp(value: number, lower: number, upper: number) {
+  return Math.min(Math.max(value, lower), upper);
+}
 
-    setExpandedChapter(isExpanding ? index : null);
+function formatChapterRange([start, end]: [number, number]) {
+  return start === end ? `第 ${start} 章` : `第 ${start}–${end} 章`;
+}
 
-    if (isExpanding) {
-      onSelectChapter(index);
+function PlanNumberField({
+  label,
+  max,
+  maxLength,
+  min,
+  onChange,
+  suffix,
+  value,
+}: PlanNumberFieldProps) {
+  const [draft, setDraft] = useState<string | null>(null);
+
+  function commit() {
+    const parsed = Number(draft ?? value);
+    const nextValue = clamp(
+      Number.isFinite(parsed) ? Math.round(parsed) : value,
+      min,
+      max,
+    );
+
+    setDraft(null);
+
+    if (nextValue !== value) {
+      onChange(nextValue);
     }
   }
+
+  function updateDraft(text: string) {
+    const digits = text.replace(/\D/g, '').slice(0, maxLength);
+
+    setDraft(digits);
+
+    if (!digits) {
+      return;
+    }
+
+    const parsed = Number(digits);
+
+    if (parsed >= min && parsed <= max) {
+      onChange(parsed);
+    }
+  }
+
+  return (
+    <View style={styles.planField}>
+      <TextField
+        accessibilityLabel={label}
+        keyboardType="number-pad"
+        label={label}
+        maxLength={maxLength}
+        onBlur={commit}
+        onChangeText={updateDraft}
+        onFocus={() => setDraft(String(value))}
+        onSubmitEditing={commit}
+        returnKeyType="done"
+        selectTextOnFocus
+        style={styles.planInput}
+        trailing={
+          <ThemedText type="small" themeColor="textSecondary">
+            {suffix}
+          </ThemedText>
+        }
+        value={draft ?? String(value)}
+      />
+    </View>
+  );
+}
+
+export function OutlineStep({
+  chapterCount,
+  chapterRange,
+  idea,
+  onChangeChapterCount,
+  onChangeChapterRange,
+  onChangeWordsPerChapter,
+  onEditIdea,
+  onGenerateChapters,
+  wordsPerChapter,
+}: OutlineStepProps) {
+  const theme = useTheme();
+  const rangeLabel = formatChapterRange(chapterRange);
+  const selectedChapterCount = chapterRange[1] - chapterRange[0] + 1;
 
   return (
     <View style={styles.stepBody}>
@@ -53,7 +134,7 @@ export function OutlineStep({
           故事大纲
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          展开章节编辑概要，选择一章生成正文。
+          设置篇幅与章节范围，按所选范围生成或重写正文。
         </ThemedText>
       </View>
 
@@ -81,63 +162,79 @@ export function OutlineStep({
         </ThemedText>
       </Surface>
 
-      <SectionHeader
-        detail={`${OUTLINE_CHAPTERS.length} 章`}
-        title="章节概要"
-      />
+      <Surface radius={Radius.panel} style={styles.planCard}>
+        <View style={styles.planFields}>
+          <PlanNumberField
+            label="预计章数"
+            max={MAX_CHAPTER_COUNT}
+            maxLength={3}
+            min={MIN_CHAPTER_COUNT}
+            onChange={onChangeChapterCount}
+            suffix="章"
+            value={chapterCount}
+          />
+          <PlanNumberField
+            label="每章字数"
+            max={MAX_WORDS_PER_CHAPTER}
+            maxLength={5}
+            min={MIN_WORDS_PER_CHAPTER}
+            onChange={onChangeWordsPerChapter}
+            suffix="字"
+            value={wordsPerChapter}
+          />
+        </View>
 
-      <View style={styles.outlineList}>
-        {OUTLINE_CHAPTERS.map((chapter, index) => (
-          <ChapterAccordion
-            chapter={chapter}
-            expanded={expandedChapter === index}
-            index={index}
-            key={chapter.id}
-            onToggle={() => toggleChapter(index)}
-            selected={selectedChapter === index}
-            summaryPreview={summaries[index]}>
-            <View style={styles.summaryHeader}>
-              <View style={styles.summaryLabelRow}>
-                <SymbolView
-                  name={{ ios: 'pencil', android: 'edit' }}
-                  size={13}
-                  tintColor={theme.textSecondary}
-                />
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  概要内容
-                </ThemedText>
-              </View>
+        <View
+          style={[
+            styles.divider,
+            { backgroundColor: theme.backgroundSelected },
+          ]}
+        />
+
+        <View style={styles.rangeSection}>
+          <View style={styles.rangeHeader}>
+            <View style={styles.rangeHeading}>
+              <ThemedText type="smallBold">生成范围</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                {summaries[index].length} / 400
+                {selectedChapterCount} 章
               </ThemedText>
             </View>
+            <ThemedText type="smallBold" themeColor="accent">
+              {rangeLabel}
+            </ThemedText>
+          </View>
 
-            <TextField
-              accessibilityLabel={`第 ${index + 1} 章概要`}
-              frameStyle={[
-                styles.summaryFrame,
-                {
-                  backgroundColor: theme.background,
-                  borderColor: theme.backgroundSelected,
-                },
-              ]}
-              maxLength={400}
-              multiline
-              onChangeText={(summary) => onChangeSummary(index, summary)}
-              placeholder="写下本章的情节概要……"
-              scrollEnabled={false}
-              style={styles.summaryInput}
-              textAlignVertical="top"
-              value={summaries[index]}
+          <View style={styles.rangeFields}>
+            <PlanNumberField
+              label="起始章"
+              max={chapterRange[1]}
+              maxLength={3}
+              min={MIN_CHAPTER_COUNT}
+              onChange={(value) =>
+                onChangeChapterRange([value, chapterRange[1]])
+              }
+              suffix="章"
+              value={chapterRange[0]}
             />
-          </ChapterAccordion>
-        ))}
-      </View>
+            <PlanNumberField
+              label="结束章"
+              max={chapterCount}
+              maxLength={3}
+              min={chapterRange[0]}
+              onChange={(value) =>
+                onChangeChapterRange([chapterRange[0], value])
+              }
+              suffix="章"
+              value={chapterRange[1]}
+            />
+          </View>
+        </View>
+      </Surface>
 
       <Button
         align="between"
-        label={`生成第 ${selectedChapter + 1} 章正文`}
-        onPress={onGenerateChapter}
+        label={`生成${rangeLabel}正文`}
+        onPress={onGenerateChapters}
         trailingIcon={
           <SymbolView
             name={{ ios: 'arrow.right', android: 'arrow_forward' }}
@@ -182,30 +279,43 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
-  outlineList: {
-    gap: 8,
+  planCard: {
+    gap: 16,
+    padding: 14,
   },
-  summaryHeader: {
+  planFields: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  planField: {
+    flex: 1,
+  },
+  planInput: {
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: 500,
+    fontVariant: ['tabular-nums'],
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+  },
+  rangeSection: {
+    gap: 10,
+  },
+  rangeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
   },
-  summaryLabelRow: {
+  rangeHeading: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 7,
   },
-  summaryFrame: {
-    minHeight: 96,
-    borderWidth: 1,
-    alignItems: 'stretch',
-  },
-  summaryInput: {
-    minHeight: 94,
-    paddingVertical: 10,
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: 400,
+  rangeFields: {
+    flexDirection: 'row',
+    gap: 10,
   },
   pressed: {
     opacity: 0.62,
