@@ -21,9 +21,6 @@ export type OutlineChapter = {
   sections?: readonly ChapterSection[];
 };
 
-export const SAMPLE_IDEA =
-  '终年不散的雾港里，年轻的修灯匠在雨夜收到一封来自失踪父亲的信。信上只有一个日期：三天后，会有一艘不该存在的船驶入港口。';
-
 export const OUTLINE_CHAPTERS: readonly OutlineChapter[] = [
   {
     id: 'letter',

@@ -13,6 +13,7 @@ export const Colors = {
     backgroundSelected: '#E0E1E6',
     accent: '#1273EA',
     accentSoft: '#E8F1FC',
+    success: '#0B6B3A',
     textSecondary: '#60646C',
   },
   dark: {
@@ -22,6 +23,7 @@ export const Colors = {
     backgroundSelected: '#2E3135',
     accent: '#5CA9FF',
     accentSoft: '#132338',
+    success: '#2E9E63',
     textSecondary: '#B0B4BA',
   },
 } as const;
