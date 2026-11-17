@@ -58,3 +58,20 @@ export const Spacing = {
 } as const;
 
 export const MaxContentWidth = 800;
+
+export const Layout = {
+  cardPadding: 14,
+  compactScreenPadding: 12,
+  formPadding: 16,
+  screenPadding: 20,
+  sectionGap: 8,
+} as const;
+
+export const Radius = {
+  compact: 9,
+  control: 12,
+  card: 16,
+  panel: 18,
+  sheet: 20,
+  pill: 999,
+} as const;
