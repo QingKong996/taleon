@@ -12,7 +12,7 @@ import {
 import { Appearance, useColorScheme as useDeviceColorScheme } from 'react-native';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
-export type ResolvedColorScheme = 'light' | 'dark';
+type ResolvedColorScheme = 'light' | 'dark';
 
 type ThemePreferenceContextValue = {
   colorScheme: ResolvedColorScheme;

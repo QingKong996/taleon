@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ProviderSettingsProvider } from '@/providers/provider-settings';
 import { ThemePreferenceProvider } from '@/providers/theme-preference';
 
 SplashScreen.preventAutoHideAsync();
@@ -12,7 +13,9 @@ SplashScreen.preventAutoHideAsync();
 export default function TabLayout() {
   return (
     <ThemePreferenceProvider>
-      <ThemedNavigation />
+      <ProviderSettingsProvider>
+        <ThemedNavigation />
+      </ProviderSettingsProvider>
     </ThemePreferenceProvider>
   );
 }
