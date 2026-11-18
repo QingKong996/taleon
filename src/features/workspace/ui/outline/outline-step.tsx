@@ -49,6 +49,7 @@ type OutlineStepProps = {
   onChangeChapterRange: (range: [number, number]) => void;
   onChangeWordsPerChapter: (value: number) => void;
   onEditIdea: () => void;
+  onOpenChapter: () => void;
   onUpdateChapterOutline: (
     chapterNumber: number,
     changes: StoryOutlineEntry,
@@ -93,6 +94,7 @@ export function OutlineStep({
   onChangeChapterRange,
   onChangeWordsPerChapter,
   onEditIdea,
+  onOpenChapter,
   onUpdateChapterOutline,
   onUpdateSectionOutline,
   onUndoOutline,
@@ -572,6 +574,24 @@ export function OutlineStep({
           </ThemedText>
         </View>
       ) : null}
+
+      <Button
+        align="between"
+        disabled={appliedOutline.length === 0 || isGenerating}
+        label="进入章节内容"
+        onPress={onOpenChapter}
+        trailingIcon={
+          <SymbolView
+            name={{ ios: 'arrow.right', android: 'arrow_forward' }}
+            size={16}
+            tintColor={
+              appliedOutline.length > 0 && !isGenerating
+                ? theme.background
+                : theme.textSecondary
+            }
+          />
+        }
+      />
 
       <OutlineEditorModal
         onClose={() => setEditorTarget(null)}

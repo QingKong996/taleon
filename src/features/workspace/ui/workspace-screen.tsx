@@ -43,6 +43,7 @@ export function WorkspaceScreen() {
           onChangeChapterRange={workbench.changeChapterRange}
           onChangeWordsPerChapter={workbench.changeWordsPerChapter}
           onEditIdea={() => workbench.setStep(0)}
+          onOpenChapter={() => workbench.openStep(2)}
           onUndoOutline={workbench.undoOutline}
           onUpdateChapterOutline={workbench.updateChapterOutline}
           onUpdateSectionOutline={workbench.updateSectionOutline}
@@ -52,9 +53,13 @@ export function WorkspaceScreen() {
 
       {workbench.step === 2 ? (
         <ChapterStep
-          chapterIndex={workbench.selectedChapter}
+          chapterNumber={workbench.selectedChapter}
+          chapters={workbench.outline}
+          idea={workbench.idea}
+          onApplySectionContent={workbench.applySectionContent}
           onBackToOutline={() => workbench.setStep(1)}
           onSelectChapter={workbench.setSelectedChapter}
+          wordsPerChapter={workbench.wordsPerChapter}
         />
       ) : null}
     </TabScrollView>

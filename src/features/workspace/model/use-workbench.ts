@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react';
 
 import {
+  getChapterContentBlockReason,
+} from '@/features/workspace/model/content/chapter-content';
+import {
   DEFAULT_CHAPTER_COUNT,
   DEFAULT_WORDS_PER_CHAPTER,
   MAX_CHAPTER_COUNT,
@@ -51,7 +54,7 @@ export function useWorkbench() {
   const [wordsPerChapter, setWordsPerChapter] = useState(
     DEFAULT_WORDS_PER_CHAPTER,
   );
-  const [selectedChapter, setSelectedChapter] = useState(0);
+  const [selectedChapter, setSelectedChapter] = useState(1);
   const [outline, setOutline] = useState<readonly StoryOutlineChapter[]>([]);
   const [previousOutline, setPreviousOutline] =
     useState<OutlineSnapshot | null>(null);
@@ -79,7 +82,7 @@ export function useWorkbench() {
       replaceOutline([]);
       setPreviousOutline(null);
       setChapterRange([1, chapterCount]);
-      setSelectedChapter(0);
+      setSelectedChapter(1);
     }
 
     if (unlockedStep > 0) {
@@ -92,7 +95,7 @@ export function useWorkbench() {
       return;
     }
 
-    setSelectedChapter(0);
+    setSelectedChapter(1);
     setChapterRange([1, chapterCount]);
     setUnlockedStep(1);
     setStep(1);
@@ -124,7 +127,7 @@ export function useWorkbench() {
 
       return [Math.min(start, nextEnd), nextEnd];
     });
-    setSelectedChapter((current) => Math.min(current, nextCount - 1));
+    setSelectedChapter((current) => Math.min(current, nextCount));
   }
 
   function changeChapterRange(range: [number, number]) {
@@ -173,6 +176,11 @@ export function useWorkbench() {
       : applicable[applicable.length - 1].chapterNumber;
 
     setChapterRange([nextRangeStart, nextRangeEnd]);
+    setSelectedChapter((current) =>
+      applicable.some((chapter) => chapter.chapterNumber === current)
+        ? current
+        : applicable[0].chapterNumber,
+    );
 
     return true;
   }
@@ -193,6 +201,48 @@ export function useWorkbench() {
       outlineRef.current.map((item) =>
         item.chapterNumber === chapterNumber
           ? { ...item, sections }
+          : item,
+      ),
+    );
+
+    return true;
+  }
+
+  function applySectionContent(
+    chapterNumber: number,
+    sectionIndex: number,
+    content: string,
+  ) {
+    const chapter = outlineRef.current.find(
+      (item) => item.chapterNumber === chapterNumber,
+    );
+    const section = chapter?.sections[sectionIndex];
+    const normalizedContent = content.trim();
+
+    if (
+      !chapter ||
+      !section ||
+      !normalizedContent ||
+      getChapterContentBlockReason(outlineRef.current, chapterNumber)
+    ) {
+      return false;
+    }
+
+    if (section.content === normalizedContent) {
+      return true;
+    }
+
+    commitOutline(
+      outlineRef.current.map((item) =>
+        item.chapterNumber === chapterNumber
+          ? {
+              ...item,
+              sections: item.sections.map((currentSection, index) =>
+                index === sectionIndex
+                  ? { ...currentSection, content: normalizedContent }
+                  : currentSection,
+              ),
+            }
           : item,
       ),
     );
@@ -288,6 +338,7 @@ export function useWorkbench() {
   return {
     applyChapterSections,
     applyOutline,
+    applySectionContent,
     canUndoOutline: previousOutline !== null,
     chapterCount,
     chapterRange,
