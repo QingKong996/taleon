@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { FormField, TextField } from '@/components/ui/form';
 import { ThemedText } from '@/components/themed-text';
 import { Layout, Radius } from '@/constants/theme';
-import type { ProviderModelDraft } from '@/features/providers/provider-model-draft';
+import type { ProviderModelDraft } from '@/features/providers/model/provider-model-draft';
 import { useTheme } from '@/hooks/use-theme';
 
 type ProviderModelEditorModalProps = {

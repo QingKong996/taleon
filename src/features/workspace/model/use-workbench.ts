@@ -9,7 +9,7 @@ import {
   MIN_WORDS_PER_CHAPTER,
   type StoryOutlineChapter,
   type WorkbenchStep,
-} from '@/features/workspace/workbench-data';
+} from '@/features/workspace/model/workbench-data';
 
 function clamp(value: number, lower: number, upper: number) {
   return Math.min(Math.max(value, lower), upper);

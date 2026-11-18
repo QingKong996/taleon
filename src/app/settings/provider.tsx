@@ -1,1 +1,1 @@
-export { ProviderEditorScreen as default } from '@/features/providers/provider-editor-screen';
+export { ProviderEditorScreen as default } from '@/features/providers/ui/provider-editor-screen';

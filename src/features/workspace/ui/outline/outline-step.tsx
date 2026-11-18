@@ -15,16 +15,16 @@ import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
 import type {
   OutlineGenerationResult,
-} from '@/features/workspace/outline/outline-parser';
-import { OutlinePreview } from '@/features/workspace/outline/outline-preview';
-import { useOutlineGenerator } from '@/features/workspace/outline/use-outline-generator';
+} from '@/features/workspace/model/outline/outline-parser';
+import { OutlinePreview } from '@/features/workspace/ui/outline/outline-preview';
+import { useOutlineGenerator } from '@/features/workspace/model/outline/use-outline-generator';
 import {
   MAX_CHAPTER_COUNT,
   MAX_WORDS_PER_CHAPTER,
   MIN_CHAPTER_COUNT,
   MIN_WORDS_PER_CHAPTER,
   type StoryOutlineChapter,
-} from '@/features/workspace/workbench-data';
+} from '@/features/workspace/model/workbench-data';
 import { useTheme } from '@/hooks/use-theme';
 
 type OutlineStepProps = {

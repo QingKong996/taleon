@@ -8,7 +8,7 @@ import { SectionHeader } from '@/components/ui/section-header';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Layout, Radius } from '@/constants/theme';
-import { AppearancePicker } from '@/features/settings/appearance-picker';
+import { AppearancePicker } from '@/features/settings/ui/appearance-picker';
 import { useTheme } from '@/hooks/use-theme';
 import { useProviderSettings } from '@/providers/provider-settings';
 import { useThemePreference } from '@/providers/theme-preference';

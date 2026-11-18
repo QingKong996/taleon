@@ -7,7 +7,7 @@ import { Radius } from '@/constants/theme';
 import {
   WORKBENCH_STEPS,
   type WorkbenchStep,
-} from '@/features/workspace/workbench-data';
+} from '@/features/workspace/model/workbench-data';
 import { useTheme } from '@/hooks/use-theme';
 
 type StepProgressProps = {

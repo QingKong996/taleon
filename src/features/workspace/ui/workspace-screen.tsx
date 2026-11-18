@@ -2,11 +2,11 @@ import { StyleSheet, View } from 'react-native';
 
 import { TabScrollView } from '@/components/tab-scroll-view';
 import { ThemedText } from '@/components/themed-text';
-import { ChapterStep } from '@/features/workspace/chapter/chapter-step';
-import { IdeaStep } from '@/features/workspace/idea/idea-step';
-import { OutlineStep } from '@/features/workspace/outline/outline-step';
-import { StepProgress } from '@/features/workspace/step-progress';
-import { useWorkbench } from '@/features/workspace/use-workbench';
+import { ChapterStep } from '@/features/workspace/ui/chapter/chapter-step';
+import { IdeaStep } from '@/features/workspace/ui/idea/idea-step';
+import { OutlineStep } from '@/features/workspace/ui/outline/outline-step';
+import { StepProgress } from '@/features/workspace/ui/step-progress';
+import { useWorkbench } from '@/features/workspace/model/use-workbench';
 
 export function WorkspaceScreen() {
   const workbench = useWorkbench();

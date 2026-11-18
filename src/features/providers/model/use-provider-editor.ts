@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { useProviderModels } from '@/features/providers/use-provider-models';
+import { useProviderModels } from '@/features/providers/model/use-provider-models';
 import {
   getDefaultProviderApi,
   isKnownProviderApi,

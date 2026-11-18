@@ -24,9 +24,9 @@ import {
   Radius,
   Spacing,
 } from '@/constants/theme';
-import { ProviderApiField } from '@/features/providers/provider-api-field';
-import { ProviderModelEditorModal } from '@/features/providers/provider-model-editor-modal';
-import { useProviderEditor } from '@/features/providers/use-provider-editor';
+import { ProviderApiField } from '@/features/providers/ui/provider-api-field';
+import { ProviderModelEditorModal } from '@/features/providers/ui/provider-model-editor-modal';
+import { useProviderEditor } from '@/features/providers/model/use-provider-editor';
 import { useTheme } from '@/hooks/use-theme';
 import type {
   ProviderConfig,

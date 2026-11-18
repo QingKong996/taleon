@@ -10,12 +10,12 @@ import { SearchField } from '@/components/ui/search-field';
 import { SectionHeader } from '@/components/ui/section-header';
 import { ThemedText } from '@/components/themed-text';
 import { Layout, Spacing } from '@/constants/theme';
-import { ProviderCatalogTile } from '@/features/providers/provider-catalog-tile';
+import { ProviderCatalogTile } from '@/features/providers/ui/provider-catalog-tile';
 import {
   useProviderCatalog,
   type ProviderCatalogItem,
   type SavedProviderItem,
-} from '@/features/providers/use-provider-catalog';
+} from '@/features/providers/model/use-provider-catalog';
 import { useTheme } from '@/hooks/use-theme';
 
 export function ProviderCatalogScreen() {

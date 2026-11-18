@@ -3,8 +3,8 @@ import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { ScreenState } from '@/components/ui/screen-state';
-import { ProviderEditorForm } from '@/features/providers/provider-editor-form';
-import { useProviderPresetModels } from '@/features/providers/use-provider-preset-models';
+import { ProviderEditorForm } from '@/features/providers/ui/provider-editor-form';
+import { useProviderPresetModels } from '@/features/providers/model/use-provider-preset-models';
 import { useTheme } from '@/hooks/use-theme';
 import { getDefaultProviderApi } from '@/lib/provider-api';
 import { useProviderSettings } from '@/providers/provider-settings';

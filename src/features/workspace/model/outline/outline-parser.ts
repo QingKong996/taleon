@@ -1,7 +1,7 @@
 import type {
   StoryOutlineChapter,
   StoryOutlineSection,
-} from '@/features/workspace/workbench-data';
+} from '@/features/workspace/model/workbench-data';
 
 export type OutlineGenerationResult = {
   chapters: StoryOutlineChapter[];

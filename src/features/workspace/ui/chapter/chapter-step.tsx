@@ -5,11 +5,11 @@ import { StyleSheet, View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
-import { ChapterAccordion } from '@/features/workspace/chapter/chapter-accordion';
+import { ChapterAccordion } from '@/features/workspace/ui/chapter/chapter-accordion';
 import {
   OUTLINE_CHAPTERS,
   type ChapterSection,
-} from '@/features/workspace/workbench-data';
+} from '@/features/workspace/model/workbench-data';
 import { useTheme } from '@/hooks/use-theme';
 
 type ChapterStepProps = {

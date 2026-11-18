@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
-import type { OutlineGenerationResult } from '@/features/workspace/outline/outline-parser';
-import { parseOutlineResponse } from '@/features/workspace/outline/outline-parser';
-import type { StoryOutlineChapter } from '@/features/workspace/workbench-data';
+import type { OutlineGenerationResult } from '@/features/workspace/model/outline/outline-parser';
+import { parseOutlineResponse } from '@/features/workspace/model/outline/outline-parser';
+import type { StoryOutlineChapter } from '@/features/workspace/model/workbench-data';
 import { findAvailableAssistantProvider } from '@/lib/assistant-provider';
 import {
   getAssistantMessageText,

@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
-import type { StoryOutlineChapter } from '@/features/workspace/workbench-data';
+import type { StoryOutlineChapter } from '@/features/workspace/model/workbench-data';
 import { useTheme } from '@/hooks/use-theme';
 
 type OutlinePreviewProps = {

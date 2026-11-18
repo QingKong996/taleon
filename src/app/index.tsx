@@ -1,1 +1,1 @@
-export { StoriesScreen as default } from '@/features/stories/stories-screen';
+export { StoriesScreen as default } from '@/features/stories/ui/stories-screen';

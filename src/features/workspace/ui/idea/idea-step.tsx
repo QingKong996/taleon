@@ -14,7 +14,7 @@ import { TextField } from '@/components/ui/form';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
-import { useStoryIdeaGenerator } from '@/features/workspace/idea/use-story-idea-generator';
+import { useStoryIdeaGenerator } from '@/features/workspace/model/idea/use-story-idea-generator';
 import { useTheme } from '@/hooks/use-theme';
 
 const IDEA_PLACEHOLDER =

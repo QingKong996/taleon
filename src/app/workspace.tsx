@@ -1,1 +1,1 @@
-export { WorkspaceScreen as default } from '@/features/workspace/workspace-screen';
+export { WorkspaceScreen as default } from '@/features/workspace/ui/workspace-screen';
