@@ -13,20 +13,20 @@ import {
   normalizeProviderConfig,
   type ProviderConfig,
   type SaveProviderConfigInput,
-} from '@/lib/provider-config';
+} from '@/lib/provider/config';
 import {
   readStoredProviderApiKey,
   readStoredProviderConfigs,
   removeStoredProviderApiKey,
   writeStoredProviderApiKey,
   writeStoredProviderConfigs,
-} from '@/lib/provider-config-storage';
+} from '@/lib/provider/config-storage';
 
 export type {
   ProviderConfig,
   ProviderModel,
   SaveProviderConfigInput,
-} from '@/lib/provider-config';
+} from '@/lib/provider/config';
 
 type ProviderSettingsContextValue = {
   configs: readonly ProviderConfig[];

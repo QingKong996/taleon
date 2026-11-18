@@ -1,1 +1,1 @@
-export { ProviderCatalogScreen as default } from '@/features/providers/provider-catalog-screen';
+export { ProviderCatalogScreen as default } from '@/features/providers/ui/provider-catalog-screen';
