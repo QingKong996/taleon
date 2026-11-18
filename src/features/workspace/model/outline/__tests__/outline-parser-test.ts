@@ -1,4 +1,7 @@
-import { parseOutlineResponse } from '@/features/workspace/model/outline/outline-parser';
+import {
+  parseOutlineResponse,
+  parseSectionOutlineResponse,
+} from '@/features/workspace/model/outline/outline-parser';
 
 describe('parseOutlineResponse', () => {
   test('parses JSON chapters, normalizes titles, and sorts by chapter number', () => {
@@ -167,6 +170,33 @@ describe('parseOutlineResponse', () => {
     });
   });
 
+  test('scans streamed chapter objects without numbers or sections', () => {
+    const text = [
+      '{"chapters":[',
+      '{"title":"起点","outline":"雾中的港口"},',
+      '{"title":"转折","outline":"来信指向旧航线"}',
+    ].join('\n');
+
+    expect(parseOutlineResponse(text, 1, 2)).toEqual({
+      chapters: [
+        {
+          chapterNumber: 1,
+          title: '起点',
+          outline: '雾中的港口',
+          sections: [],
+        },
+        {
+          chapterNumber: 2,
+          title: '转折',
+          outline: '来信指向旧航线',
+          sections: [],
+        },
+      ],
+      expectedChapterNumbers: [1, 2],
+      missingChapterNumbers: [],
+    });
+  });
+
   test('reassigns out-of-range and duplicate chapter numbers', () => {
     const result = parseOutlineResponse(
       JSON.stringify([
@@ -256,5 +286,52 @@ describe('parseOutlineResponse', () => {
       expectedChapterNumbers: [4, 5],
       missingChapterNumbers: [4, 5],
     });
+  });
+});
+
+describe('parseSectionOutlineResponse', () => {
+  test('parses nested sections, normalizes titles, and caps at the requested count', () => {
+    const result = parseSectionOutlineResponse(
+      JSON.stringify({
+        chapter: {
+          sections: [
+            { title: '第一节：夜雾', outline: '雾中的港口' },
+            { name: '第二节 来信', summary: '柜台上的信' },
+            { title: '第三节 追踪', outline: '沿着码头追踪' },
+          ],
+        },
+      }),
+      2,
+    );
+
+    expect(result).toEqual([
+      { title: '夜雾', outline: '雾中的港口' },
+      { title: '来信', outline: '柜台上的信' },
+    ]);
+  });
+
+  test('returns no sections for invalid or empty output', () => {
+    expect(parseSectionOutlineResponse('not json', 3)).toEqual([]);
+    expect(
+      parseSectionOutlineResponse(
+        JSON.stringify({
+          sections: [{ title: '', outline: 'missing title' }],
+        }),
+        3,
+      ),
+    ).toEqual([]);
+  });
+
+  test('scans complete sections from an unfinished stream', () => {
+    const text = [
+      '{"sections":[',
+      '{"title":"第一节 门","outline":"铃响"},',
+      '{"title":"第二节 灯","outline":"灯灭"}',
+    ].join('\n');
+
+    expect(parseSectionOutlineResponse(text, 3)).toEqual([
+      { title: '门', outline: '铃响' },
+      { title: '灯', outline: '灯灭' },
+    ]);
   });
 });

@@ -9,12 +9,6 @@ export type OutlineGenerationResult = {
   missingChapterNumbers: number[];
 };
 
-export type ParsedOutlineBatch = {
-  chapters: StoryOutlineChapter[];
-  expectedChapterNumbers: number[];
-  missingChapterNumbers: number[];
-};
-
 type UnknownRecord = Record<string, unknown>;
 
 type ParsedChapter = {
@@ -42,6 +36,21 @@ const CHINESE_UNITS: Record<string, number> = {
   百: 100,
   千: 1000,
 };
+
+const CHAPTER_TITLE_KEYS = ['title', 'name', 'chapterTitle'] as const;
+const CHAPTER_OUTLINE_KEYS = [
+  'outline',
+  'summary',
+  'synopsis',
+  'chapterOutline',
+] as const;
+const SECTION_KEYS = ['sections', 'beats', 'sectionList'] as const;
+const SECTION_TITLE_KEYS = ['title', 'name'] as const;
+const SECTION_OUTLINE_KEYS = [
+  'outline',
+  'summary',
+  'synopsis',
+] as const;
 
 function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -94,7 +103,7 @@ function normalizeTitle(value: string, kind: '章' | '节') {
 }
 
 function getSectionValue(record: UnknownRecord) {
-  for (const key of ['sections', 'beats', 'sectionList']) {
+  for (const key of SECTION_KEYS) {
     if (Array.isArray(record[key])) {
       return record[key];
     }
@@ -118,12 +127,12 @@ function parseSections(value: unknown): StoryOutlineSection[] {
     try {
       sections.push({
         title: normalizeTitle(
-          readString(rawSection, ['title', 'name'], '节名'),
+          readString(rawSection, SECTION_TITLE_KEYS, '节名'),
           '节',
         ),
         outline: readString(
           rawSection,
-          ['outline', 'summary', 'synopsis'],
+          SECTION_OUTLINE_KEYS,
           '分节大纲',
         ),
       });
@@ -133,6 +142,52 @@ function parseSections(value: unknown): StoryOutlineSection[] {
   }
 
   return sections;
+}
+
+function isSectionCandidate(record: UnknownRecord) {
+  return Boolean(
+    readOptionalString(record, SECTION_TITLE_KEYS) &&
+      readOptionalString(record, SECTION_OUTLINE_KEYS),
+  );
+}
+
+function findSectionRecords(
+  value: unknown,
+  depth = 0,
+): unknown[] | null {
+  if (depth > 3) {
+    return null;
+  }
+
+  if (Array.isArray(value)) {
+    return value.some(isSectionCandidate) ? value : null;
+  }
+
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  for (const key of SECTION_KEYS) {
+    const nested = value[key];
+
+    if (Array.isArray(nested) && nested.some(isSectionCandidate)) {
+      return nested;
+    }
+  }
+
+  for (const key of ['data', 'result', 'chapter']) {
+    const nested = value[key];
+
+    if (isRecord(nested) || Array.isArray(nested)) {
+      const sections = findSectionRecords(nested, depth + 1);
+
+      if (sections) {
+        return sections;
+      }
+    }
+  }
+
+  return isSectionCandidate(value) ? [value] : null;
 }
 
 function parseChineseNumber(value: string) {
@@ -217,11 +272,7 @@ function readExplicitChapterNumber(
 }
 
 function isChapterCandidate(record: UnknownRecord) {
-  const title = readOptionalString(record, [
-    'title',
-    'name',
-    'chapterTitle',
-  ]);
+  const title = readOptionalString(record, CHAPTER_TITLE_KEYS);
 
   if (!title) {
     return false;
@@ -229,24 +280,21 @@ function isChapterCandidate(record: UnknownRecord) {
 
   return (
     getSectionValue(record) !== null ||
-    readExplicitChapterNumber(record, title) !== null
+    readExplicitChapterNumber(record, title) !== null ||
+    readOptionalString(record, CHAPTER_OUTLINE_KEYS) !== null
   );
 }
 
 function parseChapter(record: UnknownRecord): ParsedChapter | null {
   try {
-    const rawTitle = readString(
-      record,
-      ['title', 'name', 'chapterTitle'],
-      '章名',
-    );
+    const rawTitle = readString(record, CHAPTER_TITLE_KEYS, '章名');
 
     return {
       content: {
         title: normalizeTitle(rawTitle, '章'),
         outline: readString(
           record,
-          ['outline', 'summary', 'synopsis', 'chapterOutline'],
+          CHAPTER_OUTLINE_KEYS,
           '本章大纲',
         ),
         sections: parseSections(getSectionValue(record)),
@@ -510,13 +558,16 @@ function findObjectSpans(text: string) {
   return spans.sort((left, right) => left.start - right.start);
 }
 
-function scanChapterRecords(text: string) {
+function scanRecords(
+  text: string,
+  isCandidate: (record: UnknownRecord) => boolean,
+) {
   const records: UnknownRecord[] = [];
 
   for (const span of findObjectSpans(text)) {
     const candidate = parseJsonText(text.slice(span.start, span.end + 1));
 
-    if (isRecord(candidate) && isChapterCandidate(candidate)) {
+    if (isRecord(candidate) && isCandidate(candidate)) {
       records.push(candidate);
     }
   }
@@ -528,7 +579,7 @@ export function parseOutlineResponse(
   text: string,
   startChapter: number,
   expectedCount: number,
-): ParsedOutlineBatch {
+): OutlineGenerationResult {
   const expectedChapterNumbers = Array.from(
     { length: Math.max(0, expectedCount) },
     (_, index) => startChapter + index,
@@ -539,7 +590,7 @@ export function parseOutlineResponse(
   const rawRecords =
     parsedSource && parsedSource.records.length > 0
       ? parsedSource.records
-      : scanChapterRecords(text);
+      : scanRecords(text, isChapterCandidate);
   const trustedRecords = Boolean(
     parsedSource && parsedSource.records.length > 0,
   );
@@ -602,4 +653,20 @@ export function parseOutlineResponse(
       (chapterNumber) => !usedNumbers.has(chapterNumber),
     ),
   };
+}
+
+export function parseSectionOutlineResponse(
+  text: string,
+  expectedCount: number,
+): StoryOutlineSection[] {
+  const count = Math.max(0, Math.floor(expectedCount));
+
+  if (!count) {
+    return [];
+  }
+
+  const sections = findSectionRecords(parseJsonPayload(text));
+  const records = sections ?? scanRecords(text, isSectionCandidate);
+
+  return parseSections(records).slice(0, count);
 }

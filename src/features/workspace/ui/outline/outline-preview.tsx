@@ -2,23 +2,56 @@ import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Button } from '@/components/ui/button';
+import { ScrubbableNumberField } from '@/components/ui/scrubbable-number-field';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
-import type { StoryOutlineChapter } from '@/features/workspace/model/workbench-data';
+import {
+  DEFAULT_SECTION_COUNT,
+  MAX_SECTION_COUNT,
+  MIN_SECTION_COUNT,
+  type StoryOutlineChapter,
+} from '@/features/workspace/model/workbench-data';
 import { useTheme } from '@/hooks/use-theme';
 
 type OutlinePreviewProps = {
   chapters: readonly StoryOutlineChapter[];
+  disabled?: boolean;
+  generatingSectionsChapter?: number | null;
+  onEditChapter?: (chapterNumber: number) => void;
+  onEditSection?: (
+    chapterNumber: number,
+    sectionIndex: number,
+  ) => void;
+  onGenerateSections?: (
+    chapterNumber: number,
+    sectionCount: number,
+  ) => void;
 };
 
-export function OutlinePreview({ chapters }: OutlinePreviewProps) {
+export function OutlinePreview({
+  chapters,
+  disabled = false,
+  generatingSectionsChapter = null,
+  onEditChapter,
+  onEditSection,
+  onGenerateSections,
+}: OutlinePreviewProps) {
   return (
     <View style={styles.list}>
-      {chapters.map((chapter) => (
+      {chapters.map((chapter, index) => (
         <OutlinePreviewChapter
           chapter={chapter}
+          disabled={disabled}
+          generatingSections={
+            generatingSectionsChapter === chapter.chapterNumber
+          }
+          initiallyExpanded={index === 0}
           key={chapter.chapterNumber}
+          onEditChapter={onEditChapter}
+          onEditSection={onEditSection}
+          onGenerateSections={onGenerateSections}
         />
       ))}
     </View>
@@ -27,16 +60,51 @@ export function OutlinePreview({ chapters }: OutlinePreviewProps) {
 
 type OutlinePreviewChapterProps = {
   chapter: StoryOutlineChapter;
+  disabled: boolean;
+  generatingSections: boolean;
+  initiallyExpanded: boolean;
+  onEditChapter?: (chapterNumber: number) => void;
+  onEditSection?: (
+    chapterNumber: number,
+    sectionIndex: number,
+  ) => void;
+  onGenerateSections?: (
+    chapterNumber: number,
+    sectionCount: number,
+  ) => void;
 };
 
-function OutlinePreviewChapter({ chapter }: OutlinePreviewChapterProps) {
+function OutlinePreviewChapter({
+  chapter,
+  disabled,
+  generatingSections,
+  initiallyExpanded,
+  onEditChapter,
+  onEditSection,
+  onGenerateSections,
+}: OutlinePreviewChapterProps) {
   const theme = useTheme();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(
+    initiallyExpanded || chapter.sections.length > 0,
+  );
+  const [sectionCount, setSectionCount] = useState(
+    chapter.sections.length > 0
+      ? Math.min(
+          MAX_SECTION_COUNT,
+          Math.max(MIN_SECTION_COUNT, chapter.sections.length),
+        )
+      : DEFAULT_SECTION_COUNT,
+  );
+
+  const sectionLabel =
+    chapter.sections.length > 0
+      ? `${chapter.sections.length} 节`
+      : '待生成节';
 
   return (
     <Surface radius={Radius.compact} style={styles.card}>
       <Pressable
-        accessibilityLabel={`第 ${chapter.chapterNumber} 章，${chapter.title}，${chapter.sections.length} 节，${
+        accessibilityLabel={`第 ${chapter.chapterNumber} 章，${chapter.title}，${sectionLabel}，${
           expanded ? '已展开' : '已折叠'
         }`}
         accessibilityRole="button"
@@ -68,7 +136,7 @@ function OutlinePreviewChapter({ chapter }: OutlinePreviewChapterProps) {
               {chapter.title}
             </ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              {chapter.sections.length} 节
+              {sectionLabel}
             </ThemedText>
           </View>
           <ThemedText
@@ -78,12 +146,14 @@ function OutlinePreviewChapter({ chapter }: OutlinePreviewChapterProps) {
             style={styles.outline}>
             {chapter.outline}
           </ThemedText>
-          {!expanded ? (
+          {!expanded && chapter.sections.length > 0 ? (
             <ThemedText
               numberOfLines={1}
               themeColor="accent"
               style={styles.sectionPreview}>
-              {chapter.sections.map((section) => section.title).join(' · ')}
+              {chapter.sections
+                .map((section) => section.title)
+                .join(' · ')}
             </ThemedText>
           ) : null}
         </View>
@@ -105,32 +175,136 @@ function OutlinePreviewChapter({ chapter }: OutlinePreviewChapterProps) {
             styles.sections,
             { borderTopColor: theme.backgroundSelected },
           ]}>
-          {chapter.sections.map((section, index) => (
-            <View
-              key={`${chapter.chapterNumber}-${index}`}
-              style={styles.section}>
-              <View style={styles.sectionHeading}>
+          {onEditChapter ? (
+            <View style={styles.chapterEditRow}>
+              <ThemedText type="small" themeColor="textSecondary">
+                章名与大纲
+              </ThemedText>
+              <Pressable
+                accessibilityLabel={`编辑第 ${chapter.chapterNumber} 章`}
+                accessibilityRole="button"
+                accessibilityState={{ disabled }}
+                disabled={disabled}
+                hitSlop={8}
+                onPress={() => onEditChapter(chapter.chapterNumber)}
+                style={({ pressed }) => pressed && styles.pressed}>
                 <ThemedText
                   type="smallBold"
-                  themeColor="accent"
-                  style={styles.sectionNumber}>
-                  第 {index + 1} 节
+                  themeColor={disabled ? 'textSecondary' : 'accent'}>
+                  编辑
                 </ThemedText>
+              </Pressable>
+            </View>
+          ) : null}
+          {chapter.sections.length > 0 ? (
+            chapter.sections.map((section, index) => (
+              <View
+                key={`${chapter.chapterNumber}-${index}`}
+                style={styles.section}>
+                <View style={styles.sectionHeading}>
+                  <ThemedText
+                    type="smallBold"
+                    themeColor="accent"
+                    style={styles.sectionNumber}>
+                    第 {index + 1} 节
+                  </ThemedText>
+                  <ThemedText
+                    numberOfLines={1}
+                    type="smallBold"
+                    style={styles.sectionTitle}>
+                    {section.title}
+                  </ThemedText>
+                  {onEditSection ? (
+                    <Pressable
+                      accessibilityLabel={`编辑第 ${chapter.chapterNumber} 章第 ${index + 1} 节`}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled }}
+                      disabled={disabled}
+                      hitSlop={8}
+                      onPress={() =>
+                        onEditSection(
+                          chapter.chapterNumber,
+                          index,
+                        )
+                      }
+                      style={({ pressed }) =>
+                        pressed && styles.pressed
+                      }>
+                      <ThemedText
+                        type="smallBold"
+                        themeColor={
+                          disabled ? 'textSecondary' : 'accent'
+                        }
+                        style={styles.sectionEdit}>
+                        编辑
+                      </ThemedText>
+                    </Pressable>
+                  ) : null}
+                </View>
                 <ThemedText
-                  numberOfLines={1}
-                  type="smallBold"
-                  style={styles.sectionTitle}>
-                  {section.title}
+                  type="small"
+                  themeColor="textSecondary"
+                  style={styles.sectionOutline}>
+                  {section.outline}
                 </ThemedText>
               </View>
-              <ThemedText
-                type="small"
-                themeColor="textSecondary"
-                style={styles.sectionOutline}>
-                {section.outline}
-              </ThemedText>
+            ))
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary">
+              尚未生成节大纲
+            </ThemedText>
+          )}
+
+          {onGenerateSections ? (
+            <View
+              style={[
+                styles.generator,
+                { borderTopColor: theme.backgroundSelected },
+              ]}>
+              <View style={styles.generatorCopy}>
+                <ThemedText type="smallBold" style={styles.generatorTitle}>
+                  节大纲
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {chapter.sections.length > 0
+                    ? '按新的节数重新生成会覆盖现有节'
+                    : '将本章拆成有推进关系的节'}
+                </ThemedText>
+              </View>
+              <View style={styles.generatorActions}>
+                <View style={styles.sectionCountField}>
+                  <ScrubbableNumberField
+                    compact
+                    disabled={disabled}
+                    label="节数"
+                    max={MAX_SECTION_COUNT}
+                    maxLength={2}
+                    min={MIN_SECTION_COUNT}
+                    onChange={setSectionCount}
+                    suffix="节"
+                    value={sectionCount}
+                  />
+                </View>
+                <Button
+                  disabled={disabled}
+                  label={
+                    chapter.sections.length > 0
+                      ? '重新生成'
+                      : '生成节'
+                  }
+                  loading={generatingSections}
+                  onPress={() =>
+                    onGenerateSections(
+                      chapter.chapterNumber,
+                      sectionCount,
+                    )
+                  }
+                  size="compact"
+                  variant="soft"
+                />
+              </View>
             </View>
-          ))}
+          ) : null}
         </View>
       ) : null}
     </Surface>
@@ -192,6 +366,12 @@ const styles = StyleSheet.create({
     paddingTop: 9,
     paddingBottom: 10,
   },
+  chapterEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   section: {
     gap: 2,
   },
@@ -213,6 +393,30 @@ const styles = StyleSheet.create({
     paddingLeft: 48,
     fontSize: 12,
     lineHeight: 18,
+  },
+  sectionEdit: {
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  generator: {
+    gap: 7,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 9,
+  },
+  generatorCopy: {
+    gap: 1,
+  },
+  generatorTitle: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  generatorActions: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 7,
+  },
+  sectionCountField: {
+    width: 88,
   },
   pressed: {
     opacity: 0.62,
