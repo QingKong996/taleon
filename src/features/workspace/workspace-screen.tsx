@@ -2,9 +2,9 @@ import { StyleSheet, View } from 'react-native';
 
 import { TabScrollView } from '@/components/tab-scroll-view';
 import { ThemedText } from '@/components/themed-text';
-import { ChapterStep } from '@/features/workspace/chapter-step';
-import { IdeaStep } from '@/features/workspace/idea-step';
-import { OutlineStep } from '@/features/workspace/outline-step';
+import { ChapterStep } from '@/features/workspace/chapter/chapter-step';
+import { IdeaStep } from '@/features/workspace/idea/idea-step';
+import { OutlineStep } from '@/features/workspace/outline/outline-step';
 import { StepProgress } from '@/features/workspace/step-progress';
 import { useWorkbench } from '@/features/workspace/use-workbench';
 

@@ -15,9 +15,9 @@ import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
 import type {
   OutlineGenerationResult,
-} from '@/features/workspace/outline-parser';
-import { OutlinePreview } from '@/features/workspace/outline-preview';
-import { useOutlineGenerator } from '@/features/workspace/use-outline-generator';
+} from '@/features/workspace/outline/outline-parser';
+import { OutlinePreview } from '@/features/workspace/outline/outline-preview';
+import { useOutlineGenerator } from '@/features/workspace/outline/use-outline-generator';
 import {
   MAX_CHAPTER_COUNT,
   MAX_WORDS_PER_CHAPTER,
