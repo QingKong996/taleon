@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { ProviderModelDraft } from '@/features/providers/model/provider-model-draft';
-import type { ProviderModel } from '@/lib/provider-config';
+import type { ProviderModel } from '@/lib/provider/config';
 
 type UseProviderModelsOptions = {
   initialModels?: readonly ProviderModel[];

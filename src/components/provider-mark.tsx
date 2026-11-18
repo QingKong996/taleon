@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
-import { getProviderIconKeyword } from '@/lib/provider-icon';
+import { getProviderIconKeyword } from '@/lib/provider/icon';
 
 type ProviderMarkProps = {
   borderRadius?: number;

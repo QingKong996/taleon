@@ -5,15 +5,15 @@ import {
   getDefaultProviderApi,
   isKnownProviderApi,
   normalizeBaseUrl,
-} from '@/lib/provider-api';
+} from '@/lib/provider/api';
 import type {
   ProviderConfig,
   ProviderModel,
-} from '@/lib/provider-config';
+} from '@/lib/provider/config';
 import {
   fetchOpenAiModels,
   supportsOpenAiModelList,
-} from '@/lib/provider-models';
+} from '@/lib/provider/models';
 import { useProviderSettings } from '@/providers/provider-settings';
 
 type UseProviderEditorOptions = {

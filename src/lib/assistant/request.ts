@@ -18,8 +18,8 @@ import { piMessagesApi } from '@earendil-works/pi-ai/api/pi-messages.lazy';
 import { normalizeContext } from '@earendil-works/pi-ai/utils/transcript';
 import { fetch as expoFetch } from 'expo/fetch';
 
-import { getProviderBaseUrl } from '@/lib/provider-api';
-import type { ProviderConfig } from '@/lib/provider-config';
+import { getProviderBaseUrl } from '@/lib/provider/api';
+import type { ProviderConfig } from '@/lib/provider/config';
 
 const DEFAULT_CONTEXT_WINDOW = 128_000;
 const DEFAULT_MAX_TOKENS = 8_192;

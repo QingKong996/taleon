@@ -1,6 +1,6 @@
 import type { KnownApi } from '@earendil-works/pi-ai';
 
-import { normalizeBaseUrl } from '@/lib/provider-api';
+import { normalizeBaseUrl } from '@/lib/provider/api';
 
 const OPENAI_MODEL_LIST_APIS = new Set<KnownApi>([
   'openai-completions',

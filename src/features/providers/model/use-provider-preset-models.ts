@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import {
   fetchModelsDevCatalog,
   getModelsDevModels,
-} from '@/lib/models-dev';
-import type { ProviderModel } from '@/lib/provider-config';
+} from '@/lib/provider/models-dev';
+import type { ProviderModel } from '@/lib/provider/config';
 
 export function useProviderPresetModels(
   providerId: string,

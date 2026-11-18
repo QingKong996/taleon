@@ -1,6 +1,6 @@
 import type { KnownApi } from '@earendil-works/pi-ai';
 
-import { isKnownProviderApi } from '@/lib/provider-api';
+import { isKnownProviderApi } from '@/lib/provider/api';
 
 export type ProviderConfig = {
   api: KnownApi;

@@ -10,7 +10,7 @@ import { useTheme } from '@/hooks/use-theme';
 import {
   isKnownProviderApi,
   PROVIDER_API_OPTIONS,
-} from '@/lib/provider-api';
+} from '@/lib/provider/api';
 
 type ProviderApiFieldProps = {
   onChange: (api: KnownApi) => void;

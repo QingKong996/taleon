@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import {
   parseStoredProviderConfigs,
   type ProviderConfig,
-} from '@/lib/provider-config';
+} from '@/lib/provider/config';
 
 const CONFIGS_STORAGE_KEY = 'taleon.provider-configs';
 const API_KEY_STORAGE_PREFIX = 'taleon.provider.key.';

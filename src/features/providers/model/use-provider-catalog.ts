@@ -3,9 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   fetchModelsDevCatalog,
   type ModelsDevProvider,
-} from '@/lib/models-dev';
-import { getProviderBaseUrl } from '@/lib/provider-api';
-import type { ProviderConfig } from '@/lib/provider-config';
+} from '@/lib/provider/models-dev';
+import { getProviderBaseUrl } from '@/lib/provider/api';
+import type { ProviderConfig } from '@/lib/provider/config';
 import { useProviderSettings } from '@/providers/provider-settings';
 
 type CatalogStatus = 'error' | 'loading' | 'ready';

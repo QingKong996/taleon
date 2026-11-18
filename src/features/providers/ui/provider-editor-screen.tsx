@@ -6,7 +6,7 @@ import { ScreenState } from '@/components/ui/screen-state';
 import { ProviderEditorForm } from '@/features/providers/ui/provider-editor-form';
 import { useProviderPresetModels } from '@/features/providers/model/use-provider-preset-models';
 import { useTheme } from '@/hooks/use-theme';
-import { getDefaultProviderApi } from '@/lib/provider-api';
+import { getDefaultProviderApi } from '@/lib/provider/api';
 import { useProviderSettings } from '@/providers/provider-settings';
 
 function readParam(value: string | string[] | undefined) {

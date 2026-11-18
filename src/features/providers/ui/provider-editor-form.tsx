@@ -31,7 +31,7 @@ import { useTheme } from '@/hooks/use-theme';
 import type {
   ProviderConfig,
   ProviderModel,
-} from '@/lib/provider-config';
+} from '@/lib/provider/config';
 
 type ProviderEditorFormProps = {
   existingConfig?: ProviderConfig;

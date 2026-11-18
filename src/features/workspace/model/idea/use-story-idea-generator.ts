@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { findAvailableAssistantProvider } from '@/lib/assistant-provider';
+import { findAvailableAssistantProvider } from '@/lib/assistant/provider';
 import {
   getAssistantMessageText,
   streamAssistantMessage,
-} from '@/lib/assistant-request';
+} from '@/lib/assistant/request';
 import { useProviderSettings } from '@/providers/provider-settings';
 
 const RANDOM_IDEA_SYSTEM_PROMPT = [

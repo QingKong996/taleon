@@ -1,4 +1,4 @@
-import type { ProviderConfig } from '@/lib/provider-config';
+import type { ProviderConfig } from '@/lib/provider/config';
 
 export type AvailableAssistantProvider = {
   apiKey: string;
