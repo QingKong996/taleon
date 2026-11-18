@@ -20,6 +20,18 @@ export type OutlineChapter = {
   sections?: readonly ChapterSection[];
 };
 
+export type StoryOutlineSection = {
+  outline: string;
+  title: string;
+};
+
+export type StoryOutlineChapter = {
+  chapterNumber: number;
+  outline: string;
+  sections: readonly StoryOutlineSection[];
+  title: string;
+};
+
 export const DEFAULT_CHAPTER_COUNT = 12;
 export const DEFAULT_WORDS_PER_CHAPTER = 2000;
 export const MIN_CHAPTER_COUNT = 1;

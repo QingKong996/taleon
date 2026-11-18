@@ -26,20 +26,23 @@ export function WorkspaceScreen() {
         <IdeaStep
           idea={workbench.idea}
           onChangeIdea={workbench.changeIdea}
-          onGenerate={workbench.generateOutline}
+          onGenerate={workbench.openOutlineStep}
         />
       ) : null}
 
       {workbench.step === 1 ? (
         <OutlineStep
+          appliedOutline={workbench.outline}
+          canUndoOutline={workbench.canUndoOutline}
           chapterCount={workbench.chapterCount}
           chapterRange={workbench.chapterRange}
           idea={workbench.idea}
+          onApplyOutline={workbench.applyOutline}
           onChangeChapterCount={workbench.changeChapterCount}
           onChangeChapterRange={workbench.changeChapterRange}
           onChangeWordsPerChapter={workbench.changeWordsPerChapter}
           onEditIdea={() => workbench.setStep(0)}
-          onGenerateChapters={workbench.generateChapters}
+          onUndoOutline={workbench.undoOutline}
           wordsPerChapter={workbench.wordsPerChapter}
         />
       ) : null}

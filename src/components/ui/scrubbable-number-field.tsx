@@ -15,13 +15,15 @@ import {
   type PanGestureHandlerEventPayload,
 } from 'react-native-gesture-handler';
 
-import { FormField, TextField } from '@/components/ui/form';
+import { TextField } from '@/components/ui/form';
 import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type ScrubbableNumberFieldProps = {
   accessibilityLabel?: string;
+  compact?: boolean;
+  disabled?: boolean;
   label: string;
   max: number;
   maxLength: number;
@@ -59,6 +61,8 @@ function getScrubStepCount(translationY: number, pixelsPerStep: number) {
 
 export function ScrubbableNumberField({
   accessibilityLabel,
+  compact = false,
+  disabled = false,
   label,
   max,
   maxLength,
@@ -138,6 +142,10 @@ export function ScrubbableNumberField({
   }
 
   function adjustByStep(direction: -1 | 1) {
+    if (disabled) {
+      return;
+    }
+
     const { step: currentStep } = tuningRef.current;
 
     updateValue(valueRef.current + direction * currentStep);
@@ -223,6 +231,7 @@ export function ScrubbableNumberField({
     /* eslint-disable react-hooks/refs -- Gesture callbacks run outside render. */
     const panGesture = Gesture.Pan()
       .activateAfterLongPress(LONG_PRESS_DURATION)
+      .enabled(!disabled)
       .hitSlop(4)
       .shouldCancelWhenOutside(false)
       .runOnJS(true)
@@ -240,47 +249,77 @@ export function ScrubbableNumberField({
     handlePanUpdate,
     handleTouchesDown,
     handleTouchesMove,
+    disabled,
   ]);
 
   const trailing = (
-    <ThemedText type="small" themeColor="textSecondary">
+    <ThemedText
+      type="small"
+      themeColor="textSecondary"
+      style={compact && styles.compactSuffix}>
       {suffix}
+    </ThemedText>
+  );
+  const fieldLabel = (
+    <ThemedText
+      type="small"
+      themeColor="textSecondary"
+      style={[styles.label, compact && styles.compactLabel]}>
+      {label}
     </ThemedText>
   );
 
   if (isEditing) {
     return (
-      <TextField
-        accessibilityLabel={accessibilityLabel ?? label}
-        autoFocus
-        frameStyle={[styles.frame, { borderColor: theme.accent }]}
-        keyboardType="number-pad"
-        label={label}
-        maxLength={maxLength}
-        onBlur={commitDraft}
-        onChangeText={updateDraft}
-        onFocus={() => setDraft(String(value))}
-        onSubmitEditing={commitDraft}
-        returnKeyType="done"
-        selectTextOnFocus
-        style={textStyle}
-        trailing={trailing}
-        value={draft ?? String(value)}
-      />
+      <View style={[styles.field, compact && styles.compactField]}>
+        {fieldLabel}
+        <TextField
+          accessibilityLabel={accessibilityLabel ?? label}
+          autoFocus
+          editable={!disabled}
+          frameStyle={[
+            styles.frame,
+            compact && styles.compactFrame,
+            { borderColor: theme.accent },
+          ]}
+          keyboardType="number-pad"
+          maxLength={maxLength}
+          onBlur={commitDraft}
+          onChangeText={updateDraft}
+          onFocus={() => setDraft(String(value))}
+          onSubmitEditing={commitDraft}
+          returnKeyType="done"
+          selectTextOnFocus
+          style={[textStyle, compact && styles.compactInput]}
+          trailing={trailing}
+          value={draft ?? String(value)}
+        />
+      </View>
     );
   }
 
   return (
-    <FormField label={label}>
+    <View
+      style={[
+        styles.field,
+        compact && styles.compactField,
+        disabled && styles.disabled,
+      ]}>
+      {fieldLabel}
       <GestureDetector gesture={fieldGesture}>
         <View
-          accessibilityActions={[
-            { name: 'increment', label: '增加' },
-            { name: 'decrement', label: '减少' },
-          ]}
+          accessibilityActions={
+            disabled
+              ? []
+              : [
+                  { name: 'increment', label: '增加' },
+                  { name: 'decrement', label: '减少' },
+                ]
+          }
           accessibilityHint="点击输入，长按后上下滑动调整"
           accessibilityLabel={accessibilityLabel ?? label}
           accessibilityRole="adjustable"
+          accessibilityState={{ disabled }}
           accessibilityValue={{
             max,
             min,
@@ -298,6 +337,8 @@ export function ScrubbableNumberField({
             style={[
               styles.frame,
               styles.valueFrame,
+              compact && styles.compactFrame,
+              compact && styles.compactValueFrame,
               {
                 backgroundColor: isScrubbing
                   ? theme.accentSoft
@@ -315,15 +356,37 @@ export function ScrubbableNumberField({
           </View>
         </View>
       </GestureDetector>
-    </FormField>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  field: {
+    gap: 5,
+  },
+  compactField: {
+    gap: 3,
+  },
+  label: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  compactLabel: {
+    fontSize: 11,
+    lineHeight: 15,
+  },
   frame: {
     borderWidth: 1,
     borderRadius: Radius.control,
     minHeight: 42,
+  },
+  compactFrame: {
+    minHeight: 32,
+    paddingHorizontal: 8,
+  },
+  compactInput: {
+    minHeight: 32,
+    paddingVertical: 5,
   },
   valueFrame: {
     flexDirection: 'row',
@@ -331,8 +394,19 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 12,
   },
+  compactValueFrame: {
+    gap: 5,
+    paddingHorizontal: 8,
+  },
+  compactSuffix: {
+    fontSize: 11,
+    lineHeight: 15,
+  },
   value: {
     flex: 1,
     fontVariant: ['tabular-nums'],
+  },
+  disabled: {
+    opacity: 0.55,
   },
 });
