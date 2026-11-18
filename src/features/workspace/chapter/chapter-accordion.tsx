@@ -22,7 +22,6 @@ type ChapterAccordionProps = {
   index: number;
   onToggle: () => void;
   selected: boolean;
-  summaryPreview?: string;
 };
 
 export function ChapterAccordion({
@@ -33,7 +32,6 @@ export function ChapterAccordion({
   index,
   onToggle,
   selected,
-  summaryPreview,
 }: ChapterAccordionProps) {
   const theme = useTheme();
 
@@ -87,15 +85,6 @@ export function ChapterAccordion({
               {chapter.beat}
             </ThemedText>
           </View>
-          {!expanded && summaryPreview ? (
-            <ThemedText
-              type="small"
-              themeColor="textSecondary"
-              numberOfLines={1}
-              style={styles.summary}>
-              {summaryPreview}
-            </ThemedText>
-          ) : null}
         </View>
 
         <SymbolView
@@ -161,9 +150,6 @@ const styles = StyleSheet.create({
   beat: {
     fontSize: 12,
     lineHeight: 16,
-  },
-  summary: {
-    lineHeight: 19,
   },
   content: {
     gap: 8,

@@ -2,9 +2,9 @@ import { StyleSheet, View } from 'react-native';
 
 import { TabScrollView } from '@/components/tab-scroll-view';
 import { ThemedText } from '@/components/themed-text';
-import { ChapterStep } from '@/features/workspace/chapter-step';
-import { IdeaStep } from '@/features/workspace/idea-step';
-import { OutlineStep } from '@/features/workspace/outline-step';
+import { ChapterStep } from '@/features/workspace/chapter/chapter-step';
+import { IdeaStep } from '@/features/workspace/idea/idea-step';
+import { OutlineStep } from '@/features/workspace/outline/outline-step';
 import { StepProgress } from '@/features/workspace/step-progress';
 import { useWorkbench } from '@/features/workspace/use-workbench';
 
@@ -26,19 +26,24 @@ export function WorkspaceScreen() {
         <IdeaStep
           idea={workbench.idea}
           onChangeIdea={workbench.changeIdea}
-          onGenerate={workbench.generateOutline}
+          onGenerate={workbench.openOutlineStep}
         />
       ) : null}
 
       {workbench.step === 1 ? (
         <OutlineStep
+          appliedOutline={workbench.outline}
+          canUndoOutline={workbench.canUndoOutline}
+          chapterCount={workbench.chapterCount}
+          chapterRange={workbench.chapterRange}
           idea={workbench.idea}
-          onChangeSummary={workbench.updateChapterSummary}
+          onApplyOutline={workbench.applyOutline}
+          onChangeChapterCount={workbench.changeChapterCount}
+          onChangeChapterRange={workbench.changeChapterRange}
+          onChangeWordsPerChapter={workbench.changeWordsPerChapter}
           onEditIdea={() => workbench.setStep(0)}
-          onGenerateChapter={workbench.generateChapter}
-          onSelectChapter={workbench.setSelectedChapter}
-          selectedChapter={workbench.selectedChapter}
-          summaries={workbench.chapterSummaries}
+          onUndoOutline={workbench.undoOutline}
+          wordsPerChapter={workbench.wordsPerChapter}
         />
       ) : null}
 

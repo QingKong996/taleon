@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { findAvailableAssistantProvider } from '@/lib/assistant-provider';
 import {
   getAssistantMessageText,
   streamAssistantMessage,
 } from '@/lib/assistant-request';
-import type { ProviderConfig } from '@/lib/provider-config';
 import { useProviderSettings } from '@/providers/provider-settings';
 
 const RANDOM_IDEA_SYSTEM_PROMPT = [
@@ -65,34 +65,6 @@ function pickRandom<T>(values: readonly T[]) {
   return values[Math.floor(Math.random() * values.length)];
 }
 
-async function findAvailableProvider(
-  configs: readonly ProviderConfig[],
-  getProviderApiKey: (configId: string) => Promise<string | null>,
-) {
-  let hasConfiguredModel = false;
-
-  for (const config of configs) {
-    const modelId = config.models?.find((model) => model.id.trim())?.id.trim();
-
-    if (!modelId) {
-      continue;
-    }
-
-    hasConfiguredModel = true;
-    const apiKey = (await getProviderApiKey(config.id))?.trim();
-
-    if (apiKey) {
-      return { apiKey, config, modelId };
-    }
-  }
-
-  throw new Error(
-    hasConfiguredModel
-      ? '请先为供应商配置 API Key'
-      : '请先在设置中添加供应商和模型',
-  );
-}
-
 function createRandomIdeaPrompt() {
   return [
     `随机生成一个${pickRandom(GENRES)}故事想法。`,
@@ -131,7 +103,7 @@ export function useStoryIdeaGenerator() {
     setIsGenerating(true);
 
     try {
-      const { apiKey, config, modelId } = await findAvailableProvider(
+      const { apiKey, config, modelId } = await findAvailableAssistantProvider(
         configs,
         getProviderApiKey,
       );
