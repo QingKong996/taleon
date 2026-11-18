@@ -13,10 +13,7 @@ import { ScrubbableNumberField } from '@/components/ui/scrubbable-number-field';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
-import type {
-  OutlineGenerationResult,
-} from '@/features/workspace/model/outline/outline-parser';
-import { OutlinePreview } from '@/features/workspace/ui/outline/outline-preview';
+import type { OutlineGenerationResult } from '@/features/workspace/model/outline/outline-parser';
 import { useOutlineGenerator } from '@/features/workspace/model/outline/use-outline-generator';
 import {
   MAX_CHAPTER_COUNT,
@@ -24,7 +21,14 @@ import {
   MIN_CHAPTER_COUNT,
   MIN_WORDS_PER_CHAPTER,
   type StoryOutlineChapter,
+  type StoryOutlineEntry,
+  type StoryOutlineSection,
 } from '@/features/workspace/model/workbench-data';
+import {
+  OutlineEditorModal,
+  type OutlineEditorTarget,
+} from '@/features/workspace/ui/outline/outline-editor-modal';
+import { OutlinePreview } from '@/features/workspace/ui/outline/outline-preview';
 import { useTheme } from '@/hooks/use-theme';
 
 type OutlineStepProps = {
@@ -33,6 +37,10 @@ type OutlineStepProps = {
   chapterCount: number;
   chapterRange: [number, number];
   idea: string;
+  onApplyChapterSections: (
+    chapterNumber: number,
+    sections: readonly StoryOutlineSection[],
+  ) => boolean;
   onApplyOutline: (
     chapters: readonly StoryOutlineChapter[],
     range?: readonly [number, number],
@@ -41,6 +49,15 @@ type OutlineStepProps = {
   onChangeChapterRange: (range: [number, number]) => void;
   onChangeWordsPerChapter: (value: number) => void;
   onEditIdea: () => void;
+  onUpdateChapterOutline: (
+    chapterNumber: number,
+    changes: StoryOutlineEntry,
+  ) => boolean;
+  onUpdateSectionOutline: (
+    chapterNumber: number,
+    sectionIndex: number,
+    changes: StoryOutlineEntry,
+  ) => boolean;
   onUndoOutline: () => void;
   wordsPerChapter: number;
 };
@@ -70,19 +87,39 @@ export function OutlineStep({
   chapterCount,
   chapterRange,
   idea,
+  onApplyChapterSections,
   onApplyOutline,
   onChangeChapterCount,
   onChangeChapterRange,
   onChangeWordsPerChapter,
   onEditIdea,
+  onUpdateChapterOutline,
+  onUpdateSectionOutline,
   onUndoOutline,
   wordsPerChapter,
 }: OutlineStepProps) {
   const theme = useTheme();
-  const { generateOutline, isGenerating, isReady, progress } =
-    useOutlineGenerator();
+  const {
+    activeGeneration,
+    generateChapterSections,
+    generateOutline,
+    isReady,
+    progress,
+  } = useOutlineGenerator();
   const [preview, setPreview] =
     useState<OutlineGenerationResult | null>(null);
+  const [sectionPreview, setSectionPreview] = useState<{
+    chapterNumber: number;
+    sections: readonly StoryOutlineSection[];
+  } | null>(null);
+  const [editorTarget, setEditorTarget] =
+    useState<OutlineEditorTarget | null>(null);
+  const isGenerating = activeGeneration !== null;
+  const isGeneratingOutline = activeGeneration?.kind === 'outline';
+  const generatingSectionsChapter =
+    activeGeneration?.kind === 'sections'
+      ? activeGeneration.chapterNumber
+      : null;
   const rangeLabel = formatChapterRange(chapterRange);
   const selectedChapterCount = chapterRange[1] - chapterRange[0] + 1;
   const appliedChapters = appliedOutline.filter(
@@ -90,9 +127,16 @@ export function OutlineStep({
       chapter.chapterNumber >= chapterRange[0] &&
       chapter.chapterNumber <= chapterRange[1],
   );
-  const displayedChapters = preview?.chapters ?? appliedChapters;
-  const hasPreview =
-    preview !== null && preview.chapters.length > 0;
+  const hasPreview = preview !== null && preview.chapters.length > 0;
+  const outlineChapters = preview?.chapters ?? appliedChapters;
+  const displayedChapters =
+    !hasPreview && sectionPreview
+      ? outlineChapters.map((chapter) =>
+          chapter.chapterNumber === sectionPreview.chapterNumber
+            ? { ...chapter, sections: sectionPreview.sections }
+            : chapter,
+        )
+      : outlineChapters;
   const previewChapterCount = preview?.chapters.length ?? 0;
   const previewExpectedCount =
     preview?.expectedChapterNumbers.length ?? 0;
@@ -100,7 +144,8 @@ export function OutlineStep({
   const displayRangeLabel = hasPreview
     ? formatOutlineRange(preview?.chapters ?? [])
     : rangeLabel;
-  const canGenerate = idea.trim().length > 0 && isReady && !isGenerating;
+  const canGenerate =
+    idea.trim().length > 0 && isReady && !isGenerating;
 
   async function handleGenerateOutline() {
     try {
@@ -155,6 +200,130 @@ export function OutlineStep({
     );
   }
 
+  async function handleGenerateSections(
+    chapterNumber: number,
+    sectionCount: number,
+  ) {
+    setSectionPreview(null);
+
+    try {
+      const sections = await generateChapterSections({
+        chapterCount,
+        chapterNumber,
+        existingOutline: appliedOutline,
+        idea,
+        onPartialSections(partialSections) {
+          setSectionPreview({
+            chapterNumber,
+            sections: partialSections,
+          });
+        },
+        sectionCount,
+        wordsPerChapter,
+      });
+
+      if (!sections) {
+        return;
+      }
+
+      if (!onApplyChapterSections(chapterNumber, sections)) {
+        Alert.alert('无法应用节大纲', '请先生成该章大纲。');
+        return;
+      }
+
+      if (sections.length < sectionCount) {
+        Alert.alert(
+          '节大纲未完整生成',
+          `AI 返回了 ${sections.length}/${sectionCount} 节，可调整节数后重新生成。`,
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        '无法生成节大纲',
+        error instanceof Error ? error.message : '请稍后重试',
+      );
+    } finally {
+      setSectionPreview(null);
+    }
+  }
+
+  function handleEditChapter(chapterNumber: number) {
+    if (hasPreview || isGenerating) {
+      return;
+    }
+
+    const chapter = appliedOutline.find(
+      (item) => item.chapterNumber === chapterNumber,
+    );
+
+    if (!chapter) {
+      return;
+    }
+
+    setEditorTarget({
+      chapterNumber: chapter.chapterNumber,
+      kind: 'chapter',
+      outline: chapter.outline,
+      title: chapter.title,
+    });
+  }
+
+  function handleEditSection(
+    chapterNumber: number,
+    sectionIndex: number,
+  ) {
+    if (hasPreview || isGenerating) {
+      return;
+    }
+
+    const section = appliedOutline.find(
+      (chapter) => chapter.chapterNumber === chapterNumber,
+    )?.sections[sectionIndex];
+
+    if (!section) {
+      return;
+    }
+
+    setEditorTarget({
+      chapterNumber,
+      kind: 'section',
+      outline: section.outline,
+      sectionIndex,
+      title: section.title,
+    });
+  }
+
+  function handleSaveOutline(changes: StoryOutlineEntry) {
+    if (!editorTarget) {
+      return;
+    }
+
+    const updated =
+      editorTarget.kind === 'chapter'
+        ? onUpdateChapterOutline(editorTarget.chapterNumber, changes)
+        : onUpdateSectionOutline(
+            editorTarget.chapterNumber,
+            editorTarget.sectionIndex,
+            changes,
+          );
+
+    if (!updated) {
+      Alert.alert(
+        '无法保存大纲',
+        '大纲内容已发生变化，请重新打开编辑。',
+      );
+      return;
+    }
+
+    setEditorTarget(null);
+  }
+
+  const generationLabel = isGeneratingOutline
+    ? `正在生成 ${progress.completed}/${progress.total} 章`
+    : generatingSectionsChapter
+      ? `正在生成第 ${generatingSectionsChapter} 章的节大纲…`
+      : '';
+
   return (
     <View style={styles.stepBody}>
       <View style={styles.intro}>
@@ -162,7 +331,7 @@ export function OutlineStep({
           故事大纲
         </ThemedText>
         <ThemedText type="small" style={styles.introCopy}>
-          生成章、节名与剧情大纲，再应用到当前范围。
+          按范围生成章大纲，不自动生成节；展开章节后可指定节数生成。
         </ThemedText>
       </View>
 
@@ -187,9 +356,7 @@ export function OutlineStep({
             </ThemedText>
           </Pressable>
         </View>
-        <ThemedText
-          numberOfLines={2}
-          style={styles.ideaPreviewText}>
+        <ThemedText numberOfLines={2} style={styles.ideaPreviewText}>
           {idea}
         </ThemedText>
       </Surface>
@@ -290,11 +457,11 @@ export function OutlineStep({
         align="between"
         disabled={!canGenerate}
         label={
-          isGenerating
+          isGeneratingOutline
             ? '正在生成大纲…'
             : `${displayedChapters.length > 0 ? '重新生成' : '生成'}${rangeLabel}大纲`
         }
-        loading={isGenerating}
+        loading={isGeneratingOutline}
         onPress={() => {
           void handleGenerateOutline();
         }}
@@ -314,7 +481,7 @@ export function OutlineStep({
         <View style={styles.generatingStatus}>
           <ActivityIndicator color={theme.accent} size="small" />
           <ThemedText type="small" themeColor="textSecondary">
-            正在生成 {progress.completed}/{progress.total} 章
+            {generationLabel}
           </ThemedText>
         </View>
       ) : null}
@@ -376,7 +543,27 @@ export function OutlineStep({
             </ThemedText>
           ) : null}
 
-          <OutlinePreview chapters={displayedChapters} />
+          <OutlinePreview
+            chapters={displayedChapters}
+            disabled={isGenerating}
+            generatingSectionsChapter={generatingSectionsChapter}
+            onEditChapter={
+              hasPreview ? undefined : handleEditChapter
+            }
+            onEditSection={
+              hasPreview ? undefined : handleEditSection
+            }
+            onGenerateSections={
+              hasPreview
+                ? undefined
+                : (chapterNumber, sectionCount) => {
+                    void handleGenerateSections(
+                      chapterNumber,
+                      sectionCount,
+                    );
+                  }
+            }
+          />
         </View>
       ) : !isGenerating ? (
         <View style={styles.emptyState}>
@@ -385,6 +572,12 @@ export function OutlineStep({
           </ThemedText>
         </View>
       ) : null}
+
+      <OutlineEditorModal
+        onClose={() => setEditorTarget(null)}
+        onSave={handleSaveOutline}
+        target={editorTarget}
+      />
     </View>
   );
 }

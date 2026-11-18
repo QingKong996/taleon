@@ -8,6 +8,8 @@ import {
   MIN_CHAPTER_COUNT,
   MIN_WORDS_PER_CHAPTER,
   type StoryOutlineChapter,
+  type StoryOutlineEntry,
+  type StoryOutlineSection,
   type WorkbenchStep,
 } from '@/features/workspace/model/workbench-data';
 
@@ -60,12 +62,23 @@ export function useWorkbench() {
     setOutline(nextOutline);
   }
 
+  function commitOutline(nextOutline: readonly StoryOutlineChapter[]) {
+    setPreviousOutline({
+      chapters: outlineRef.current,
+      range: chapterRange,
+      selectedChapter,
+    });
+    replaceOutline(nextOutline);
+    setUnlockedStep(2);
+  }
+
   function changeIdea(value: string) {
     setIdea(value);
 
     if (outlineRef.current.length > 0) {
       replaceOutline([]);
       setPreviousOutline(null);
+      setChapterRange([1, chapterCount]);
       setSelectedChapter(0);
     }
 
@@ -151,12 +164,7 @@ export function useWorkbench() {
       return false;
     }
 
-    setPreviousOutline({
-      chapters: outlineRef.current,
-      range: chapterRange,
-      selectedChapter,
-    });
-    replaceOutline(mergeOutline(outlineRef.current, applicable));
+    commitOutline(mergeOutline(outlineRef.current, applicable));
     const nextRangeStart = generatedRange
       ? clamp(generatedRange[0], MIN_CHAPTER_COUNT, chapterCount)
       : applicable[0].chapterNumber;
@@ -164,14 +172,97 @@ export function useWorkbench() {
       ? clamp(generatedRange[1], nextRangeStart, chapterCount)
       : applicable[applicable.length - 1].chapterNumber;
 
-    setChapterRange([
-      nextRangeStart,
-      nextRangeEnd,
-    ]);
-    setSelectedChapter(
-      clamp(applicable[0].chapterNumber - 1, 0, chapterCount - 1),
+    setChapterRange([nextRangeStart, nextRangeEnd]);
+
+    return true;
+  }
+
+  function applyChapterSections(
+    chapterNumber: number,
+    sections: readonly StoryOutlineSection[],
+  ) {
+    const chapter = outlineRef.current.find(
+      (item) => item.chapterNumber === chapterNumber,
     );
-    setUnlockedStep(2);
+
+    if (!chapter || sections.length === 0) {
+      return false;
+    }
+
+    commitOutline(
+      outlineRef.current.map((item) =>
+        item.chapterNumber === chapterNumber
+          ? { ...item, sections }
+          : item,
+      ),
+    );
+
+    return true;
+  }
+
+  function updateChapterOutline(
+    chapterNumber: number,
+    changes: StoryOutlineEntry,
+  ) {
+    const chapter = outlineRef.current.find(
+      (item) => item.chapterNumber === chapterNumber,
+    );
+    const title = changes.title.trim();
+    const outline = changes.outline.trim();
+
+    if (!chapter || !title || !outline) {
+      return false;
+    }
+
+    if (chapter.title === title && chapter.outline === outline) {
+      return true;
+    }
+
+    commitOutline(
+      outlineRef.current.map((item) =>
+        item.chapterNumber === chapterNumber
+          ? { ...item, title, outline }
+          : item,
+      ),
+    );
+
+    return true;
+  }
+
+  function updateSectionOutline(
+    chapterNumber: number,
+    sectionIndex: number,
+    changes: StoryOutlineEntry,
+  ) {
+    const chapter = outlineRef.current.find(
+      (item) => item.chapterNumber === chapterNumber,
+    );
+    const section = chapter?.sections[sectionIndex];
+    const title = changes.title.trim();
+    const outline = changes.outline.trim();
+
+    if (!chapter || !section || !title || !outline) {
+      return false;
+    }
+
+    if (section.title === title && section.outline === outline) {
+      return true;
+    }
+
+    commitOutline(
+      outlineRef.current.map((item) =>
+        item.chapterNumber === chapterNumber
+          ? {
+              ...item,
+              sections: item.sections.map((currentSection, index) =>
+                index === sectionIndex
+                  ? { ...currentSection, title, outline }
+                  : currentSection,
+              ),
+            }
+          : item,
+      ),
+    );
 
     return true;
   }
@@ -195,6 +286,7 @@ export function useWorkbench() {
   }
 
   return {
+    applyChapterSections,
     applyOutline,
     canUndoOutline: previousOutline !== null,
     chapterCount,
@@ -213,6 +305,8 @@ export function useWorkbench() {
     step,
     undoOutline,
     unlockedStep,
+    updateChapterOutline,
+    updateSectionOutline,
     wordsPerChapter,
   };
 }

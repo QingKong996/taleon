@@ -37,12 +37,15 @@ export function WorkspaceScreen() {
           chapterCount={workbench.chapterCount}
           chapterRange={workbench.chapterRange}
           idea={workbench.idea}
+          onApplyChapterSections={workbench.applyChapterSections}
           onApplyOutline={workbench.applyOutline}
           onChangeChapterCount={workbench.changeChapterCount}
           onChangeChapterRange={workbench.changeChapterRange}
           onChangeWordsPerChapter={workbench.changeWordsPerChapter}
           onEditIdea={() => workbench.setStep(0)}
           onUndoOutline={workbench.undoOutline}
+          onUpdateChapterOutline={workbench.updateChapterOutline}
+          onUpdateSectionOutline={workbench.updateSectionOutline}
           wordsPerChapter={workbench.wordsPerChapter}
         />
       ) : null}
