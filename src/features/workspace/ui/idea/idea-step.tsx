@@ -19,7 +19,7 @@ export function IdeaStep({
   onGenerate,
 }: IdeaStepProps) {
   const theme = useTheme();
-  const workflow = useIdeaStep({ idea, onChangeIdea });
+  const { actions, state } = useIdeaStep({ idea, onChangeIdea });
 
   return (
     <View style={styles.stepBody}>
@@ -33,32 +33,13 @@ export function IdeaStep({
       </View>
 
       <IdeaEditorCard
-        actions={{
-          onDiscardContinuation: workflow.discardContinuation,
-          onGenerate: () => {
-            void workflow.generateIdea();
-          },
-          onIdeaChange: onChangeIdea,
-          onKeepContinuation: workflow.keepContinuation,
-          onStartEditing: () => workflow.setEditing(true),
-          onStopEditing: () => workflow.setEditing(false),
-        }}
-        state={{
-          addedIdea: workflow.addedIdea,
-          displayedIdea: workflow.displayedIdea,
-          hasIdea: workflow.hasIdea,
-          idea,
-          isAwaitingDecision: workflow.isAwaitingDecision,
-          isGenerating: workflow.isGenerating,
-          isLocked: workflow.isLocked,
-          isReady: workflow.isReady,
-          showEditor: workflow.showEditor,
-        }}
+        actions={actions}
+        state={state}
       />
 
       <Button
         align="between"
-        disabled={!workflow.canGenerate}
+        disabled={!state.canGenerate}
         label="生成故事大纲"
         onPress={onGenerate}
         trailingIcon={
@@ -66,7 +47,7 @@ export function IdeaStep({
             name={{ ios: 'arrow.right', android: 'arrow_forward' }}
             size={16}
             tintColor={
-              workflow.canGenerate
+              state.canGenerate
                 ? theme.background
                 : theme.textSecondary
             }
