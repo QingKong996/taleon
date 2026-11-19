@@ -1,32 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import type { ProviderModelDraft } from '@/features/providers/model/provider-model-draft';
+import {
+  createModelFromDraft,
+  type ProviderModelDraft,
+} from '@/features/providers/model/provider-model-draft';
 import type { ProviderModel } from '@/lib/provider/config';
 
 type UseProviderModelsOptions = {
   initialModels?: readonly ProviderModel[];
   presetModels: readonly ProviderModel[];
 };
-
-function parseOptionalPositiveInteger(value: string, label: string) {
-  const normalizedValue = value.trim();
-
-  if (!normalizedValue) {
-    return undefined;
-  }
-
-  const parsedValue = Number(normalizedValue);
-
-  if (
-    !/^\d+$/.test(normalizedValue) ||
-    !Number.isSafeInteger(parsedValue) ||
-    parsedValue <= 0
-  ) {
-    throw new Error(`${label}必须是正整数`);
-  }
-
-  return parsedValue;
-}
 
 export function useProviderModels({
   initialModels,
@@ -185,42 +168,17 @@ export function useProviderModels({
       return null;
     }
 
-    const id = draft.id.trim();
+    const result = createModelFromDraft(draft, [
+      ...selectedModels,
+      ...modelOptions,
+    ]);
 
-    if (!id) {
-      return '请输入模型 ID';
+    if ('error' in result) {
+      return result.error;
     }
 
-    let contextWindow: number | undefined;
-    let maxTokens: number | undefined;
-
-    try {
-      contextWindow = parseOptionalPositiveInteger(
-        draft.contextWindow,
-        '上下文长度',
-      );
-      maxTokens = parseOptionalPositiveInteger(
-        draft.maxTokens,
-        '最大输出长度',
-      );
-    } catch (error) {
-      return error instanceof Error ? error.message : '模型信息格式无效';
-    }
-
+    const nextModel = result.model;
     const originalId = draft.mode === 'edit' ? draft.originalId : undefined;
-    const hasDuplicateId = [...selectedModels, ...modelOptions].some(
-      (model) => model.id === id && model.id !== originalId,
-    );
-
-    if (hasDuplicateId) {
-      return '模型 ID 已存在';
-    }
-
-    const nextModel: ProviderModel = {
-      contextWindow,
-      id,
-      maxTokens,
-    };
 
     if (draft.mode === 'add') {
       setModelOptions((currentOptions) => [...currentOptions, nextModel]);
