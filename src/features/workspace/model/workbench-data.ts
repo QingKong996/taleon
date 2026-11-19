@@ -20,6 +20,17 @@ export type StoryOutlineChapter = StoryOutlineEntry & {
   sections: readonly StoryOutlineSection[];
 };
 
+export type WorkbenchSnapshot = {
+  chapterCount: number;
+  chapterRange: [number, number];
+  idea: string;
+  outline: readonly StoryOutlineChapter[];
+  selectedChapter: number;
+  step: WorkbenchStep;
+  unlockedStep: WorkbenchStep;
+  wordsPerChapter: number;
+};
+
 export const DEFAULT_CHAPTER_COUNT = 12;
 export const DEFAULT_SECTION_COUNT = 3;
 export const DEFAULT_WORDS_PER_CHAPTER = 2000;

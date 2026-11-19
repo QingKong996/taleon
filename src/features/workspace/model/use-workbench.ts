@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import {
   getChapterContentBlockReason,
@@ -13,6 +13,7 @@ import {
   type StoryOutlineChapter,
   type StoryOutlineEntry,
   type StoryOutlineSection,
+  type WorkbenchSnapshot,
   type WorkbenchStep,
 } from '@/features/workspace/model/workbench-data';
 
@@ -42,23 +43,34 @@ type OutlineSnapshot = {
   selectedChapter: number;
 };
 
-export function useWorkbench() {
-  const [step, setStep] = useState<WorkbenchStep>(0);
-  const [unlockedStep, setUnlockedStep] = useState<WorkbenchStep>(0);
-  const [idea, setIdea] = useState('');
-  const [chapterCount, setChapterCount] = useState(DEFAULT_CHAPTER_COUNT);
-  const [chapterRange, setChapterRange] = useState<[number, number]>([
-    1,
-    DEFAULT_CHAPTER_COUNT,
-  ]);
-  const [wordsPerChapter, setWordsPerChapter] = useState(
-    DEFAULT_WORDS_PER_CHAPTER,
+export function useWorkbench(initialSnapshot?: WorkbenchSnapshot) {
+  const [step, setStep] = useState<WorkbenchStep>(
+    initialSnapshot?.step ?? 0,
   );
-  const [selectedChapter, setSelectedChapter] = useState(1);
-  const [outline, setOutline] = useState<readonly StoryOutlineChapter[]>([]);
+  const [unlockedStep, setUnlockedStep] = useState<WorkbenchStep>(
+    initialSnapshot?.unlockedStep ?? 0,
+  );
+  const [idea, setIdea] = useState(initialSnapshot?.idea ?? '');
+  const [chapterCount, setChapterCount] = useState(
+    initialSnapshot?.chapterCount ?? DEFAULT_CHAPTER_COUNT,
+  );
+  const [chapterRange, setChapterRange] = useState<[number, number]>(
+    initialSnapshot?.chapterRange ?? [1, DEFAULT_CHAPTER_COUNT],
+  );
+  const [wordsPerChapter, setWordsPerChapter] = useState(
+    initialSnapshot?.wordsPerChapter ?? DEFAULT_WORDS_PER_CHAPTER,
+  );
+  const [selectedChapter, setSelectedChapter] = useState(
+    initialSnapshot?.selectedChapter ?? 1,
+  );
+  const [outline, setOutline] = useState<readonly StoryOutlineChapter[]>(
+    initialSnapshot?.outline ?? [],
+  );
   const [previousOutline, setPreviousOutline] =
     useState<OutlineSnapshot | null>(null);
-  const outlineRef = useRef<readonly StoryOutlineChapter[]>([]);
+  const outlineRef = useRef<readonly StoryOutlineChapter[]>(
+    initialSnapshot?.outline ?? [],
+  );
 
   function replaceOutline(nextOutline: readonly StoryOutlineChapter[]) {
     outlineRef.current = nextOutline;
@@ -335,6 +347,29 @@ export function useWorkbench() {
     }
   }
 
+  const snapshot = useMemo<WorkbenchSnapshot>(
+    () => ({
+      chapterCount,
+      chapterRange,
+      idea,
+      outline,
+      selectedChapter,
+      step,
+      unlockedStep,
+      wordsPerChapter,
+    }),
+    [
+      chapterCount,
+      chapterRange,
+      idea,
+      outline,
+      selectedChapter,
+      step,
+      unlockedStep,
+      wordsPerChapter,
+    ],
+  );
+
   return {
     applyChapterSections,
     applyOutline,
@@ -353,6 +388,7 @@ export function useWorkbench() {
     selectedChapter,
     setSelectedChapter,
     setStep,
+    snapshot,
     step,
     undoOutline,
     unlockedStep,
