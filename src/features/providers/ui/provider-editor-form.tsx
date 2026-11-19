@@ -8,13 +8,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
+import { FormSection, TextField } from '@/components/ui/form';
 import { ScreenState } from '@/components/ui/screen-state';
 import { Layout, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useProviderEditor } from '@/features/providers/model/use-provider-editor';
 import { ProviderApiSection } from '@/features/providers/ui/provider-api-section';
 import { ProviderEditorHero } from '@/features/providers/ui/provider-editor-hero';
-import { ProviderEndpointSection } from '@/features/providers/ui/provider-endpoint-section';
-import { ProviderIdentitySection } from '@/features/providers/ui/provider-identity-section';
 import { ProviderModelEditorModal } from '@/features/providers/ui/provider-model-editor-modal';
 import { ProviderModelsSection } from '@/features/providers/ui/provider-models-section';
 import { useProviderEditorFormActions } from '@/features/providers/ui/use-provider-editor-form-actions';
@@ -88,13 +87,28 @@ export function ProviderEditorForm({
           providerId={editor.identity.providerId}
         />
 
-        <ProviderIdentitySection
-          custom={initialCustom}
-          name={editor.identity.name}
-          onChangeName={editor.identity.setName}
-          onChangeProviderId={editor.identity.setProviderId}
-          providerId={editor.identity.providerId}
-        />
+        <FormSection title="供应商">
+          <TextField
+            autoCapitalize="none"
+            autoCorrect={false}
+            label="名称"
+            onChangeText={editor.identity.setName}
+            placeholder="供应商名称"
+            value={editor.identity.name}
+          />
+
+          {initialCustom ? (
+            <TextField
+              autoCapitalize="none"
+              autoCorrect={false}
+              label="供应商 ID"
+              mono
+              onChangeText={editor.identity.setProviderId}
+              placeholder="provider-id"
+              value={editor.identity.providerId}
+            />
+          ) : null}
+        </FormSection>
 
         <ProviderApiSection
           api={editor.connection.api}
@@ -122,10 +136,18 @@ export function ProviderEditorForm({
           visibleModelOptions={editor.models.list.visibleModelOptions}
         />
 
-        <ProviderEndpointSection
-          baseUrl={editor.connection.baseUrl}
-          onChangeBaseUrl={editor.connection.setBaseUrl}
-        />
+        <FormSection title="端点">
+          <TextField
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            label="Base URL"
+            mono
+            onChangeText={editor.connection.setBaseUrl}
+            placeholder="https://api.example.com/v1"
+            value={editor.connection.baseUrl}
+          />
+        </FormSection>
 
         <Button
           disabled={editor.status.isSaving}

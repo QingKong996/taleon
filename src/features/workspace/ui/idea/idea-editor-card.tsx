@@ -1,15 +1,23 @@
 import { SymbolView } from 'expo-symbols';
-import { StyleSheet, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
+import { TextField } from '@/components/ui/form';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
-import { IdeaEditorField } from '@/features/workspace/ui/idea/idea-editor-field';
-import { IdeaEditorMeta } from '@/features/workspace/ui/idea/idea-editor-meta';
 import { useTheme } from '@/hooks/use-theme';
+
+const IDEA_PLACEHOLDER =
+  '例如：一名回到故乡的修复师，在旧宅的墙里发现一封写给自己的信……';
 
 type IdeaEditorCardState = {
   addedIdea: string;
+  canGenerate: boolean;
   displayedIdea: string;
   hasIdea: boolean;
   idea: string;
@@ -39,6 +47,7 @@ export function IdeaEditorCard({
   state,
 }: IdeaEditorCardProps) {
   const theme = useTheme();
+  const isGenerateDisabled = state.isGenerating || !state.isReady;
 
   return (
     <Surface radius={Radius.sheet} style={styles.card}>
@@ -62,27 +71,118 @@ export function IdeaEditorCard({
         </View>
       </View>
 
-      <IdeaEditorField
-        addedIdea={state.addedIdea}
-        displayedIdea={state.displayedIdea}
-        idea={state.idea}
-        isLocked={state.isLocked}
-        onChange={actions.onIdeaChange}
-        onStartEditing={actions.onStartEditing}
-        onStopEditing={actions.onStopEditing}
-        showEditor={state.showEditor}
-      />
+      {state.showEditor ? (
+        <TextField
+          accessibilityLabel="故事想法"
+          autoFocus
+          frameStyle={[
+            styles.ideaFrame,
+            {
+              backgroundColor: theme.background,
+              borderColor: theme.accent,
+            },
+          ]}
+          multiline
+          onBlur={actions.onStopEditing}
+          onChangeText={actions.onIdeaChange}
+          placeholder={IDEA_PLACEHOLDER}
+          scrollEnabled={false}
+          style={styles.ideaInput}
+          textAlignVertical="top"
+          value={state.idea}
+        />
+      ) : (
+        <Pressable
+          accessibilityHint={
+            state.isLocked ? undefined : '点击编辑故事想法'
+          }
+          accessibilityRole="button"
+          accessibilityState={{ disabled: state.isLocked }}
+          disabled={state.isLocked}
+          onPress={actions.onStartEditing}
+          style={({ pressed }) => [
+            styles.ideaFrame,
+            {
+              backgroundColor: theme.background,
+              borderColor: theme.backgroundSelected,
+            },
+            pressed && styles.pressed,
+          ]}>
+          {state.idea.length > 0 ? (
+            <Text style={[styles.ideaInput, { color: theme.text }]}>
+              {state.displayedIdea}
+              {state.addedIdea ? (
+                <Text style={{ color: theme.success }}>
+                  {state.addedIdea}
+                </Text>
+              ) : null}
+            </Text>
+          ) : (
+            <Text
+              style={[
+                styles.ideaInput,
+                { color: theme.textSecondary },
+              ]}>
+              {IDEA_PLACEHOLDER}
+            </Text>
+          )}
+        </Pressable>
+      )}
 
-      <IdeaEditorMeta
-        characterCount={state.idea.length}
-        hasIdea={state.hasIdea}
-        isAwaitingDecision={state.isAwaitingDecision}
-        isGenerating={state.isGenerating}
-        isReady={state.isReady}
-        onDiscardContinuation={actions.onDiscardContinuation}
-        onGenerate={actions.onGenerate}
-        onKeepContinuation={actions.onKeepContinuation}
-      />
+      <View style={styles.inputMeta}>
+        <ThemedText type="small" themeColor="textSecondary">
+          {state.isAwaitingDecision
+            ? '续写完成'
+            : `${state.idea.length} 字`}
+        </ThemedText>
+        {state.isAwaitingDecision ? (
+          <View style={styles.continuationActions}>
+            <Pressable
+              accessibilityLabel="抛弃续写内容"
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={actions.onDiscardContinuation}
+              style={({ pressed }) => pressed && styles.pressed}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                抛弃
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              accessibilityLabel="保留续写内容"
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={actions.onKeepContinuation}
+              style={({ pressed }) => pressed && styles.pressed}>
+              <ThemedText type="smallBold" themeColor="accent">
+                保留
+              </ThemedText>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            accessibilityLabel={
+              state.hasIdea ? '自动续写故事想法' : '随机生成故事想法'
+            }
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isGenerateDisabled }}
+            disabled={isGenerateDisabled}
+            hitSlop={8}
+            onPress={actions.onGenerate}
+            style={({ pressed }) => pressed && styles.pressed}>
+            <ThemedText
+              type="smallBold"
+              themeColor={
+                isGenerateDisabled ? 'textSecondary' : 'accent'
+              }>
+              {state.isGenerating
+                ? '生成中…'
+                : state.hasIdea
+                  ? '自动续写'
+                  : '随机生成'}
+            </ThemedText>
+          </Pressable>
+        )}
+      </View>
     </Surface>
   );
 }
@@ -106,5 +206,35 @@ const styles = StyleSheet.create({
   headerCopy: {
     flex: 1,
     gap: 2,
+  },
+  ideaFrame: {
+    minHeight: 196,
+    marginTop: 14,
+    borderWidth: 1,
+    borderRadius: Radius.control,
+    paddingHorizontal: 14,
+    alignItems: 'stretch',
+  },
+  ideaInput: {
+    minHeight: 194,
+    paddingVertical: 14,
+    fontSize: 16,
+    lineHeight: 25,
+    fontWeight: 400,
+    includeFontPadding: false,
+  },
+  inputMeta: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  continuationActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 18,
+  },
+  pressed: {
+    opacity: 0.62,
   },
 });
