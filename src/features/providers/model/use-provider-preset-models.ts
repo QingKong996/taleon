@@ -10,11 +10,13 @@ export function useProviderPresetModels(
   providerId: string,
   enabled: boolean,
 ) {
-  const [models, setModels] = useState<ProviderModel[]>([]);
+  const [result, setResult] = useState<{
+    models: ProviderModel[];
+    providerId: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!enabled || !providerId) {
-      setModels([]);
       return;
     }
 
@@ -30,19 +32,20 @@ export function useProviderPresetModels(
           (catalogProvider) => catalogProvider.id === providerId,
         );
 
-        setModels(
-          provider
+        setResult({
+          models: provider
             ? getModelsDevModels(provider).map((model) => ({
                 contextWindow: model.limit?.context,
                 id: model.id,
                 maxTokens: model.limit?.output,
               }))
             : [],
-        );
+          providerId,
+        });
       })
       .catch(() => {
         if (!controller.signal.aborted) {
-          setModels([]);
+          setResult({ models: [], providerId });
         }
       });
 
@@ -51,5 +54,7 @@ export function useProviderPresetModels(
     };
   }, [enabled, providerId]);
 
-  return models;
+  return enabled && result?.providerId === providerId
+    ? result.models
+    : [];
 }

@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
+import type { StoryDocument } from '@/features/stories/model/story-types';
+import { saveStoryDocument } from '@/features/stories/model/story-storage';
 import type { WorkbenchSnapshot } from '@/features/workspace/model/workbench-data';
-import {
-  saveStoryDocument,
-  type StoryDocument,
-} from '@/features/stories/model/story-storage';
 
 const AUTOSAVE_INTERVAL_MS = 400;
 
