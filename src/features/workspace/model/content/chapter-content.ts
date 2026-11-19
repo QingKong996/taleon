@@ -15,6 +15,12 @@ export function hasSectionContent(section: StoryOutlineSection) {
   return Boolean(section.content?.trim());
 }
 
+export function getCompletedSectionCount(
+  chapter: StoryOutlineChapter,
+) {
+  return chapter.sections.filter(hasSectionContent).length;
+}
+
 export function isChapterContentComplete(chapter: StoryOutlineChapter) {
   return (
     chapter.sections.length > 0 &&

@@ -1,32 +1,27 @@
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ProviderMark } from '@/components/provider-mark';
-import { SelectableChipGroup } from '@/components/selectable-chip-group';
 import { Button } from '@/components/ui/button';
-import { FormField, FormSection, TextField } from '@/components/ui/form';
+import { FormSection, TextField } from '@/components/ui/form';
 import { ScreenState } from '@/components/ui/screen-state';
-import { Surface } from '@/components/ui/surface';
-import { ThemedText } from '@/components/themed-text';
 import {
   Layout,
   MaxContentWidth,
-  Radius,
   Spacing,
 } from '@/constants/theme';
-import { ProviderApiField } from '@/features/providers/ui/provider-api-field';
-import { ProviderModelEditorModal } from '@/features/providers/ui/provider-model-editor-modal';
 import { useProviderEditor } from '@/features/providers/model/use-provider-editor';
+import { ProviderApiSection } from '@/features/providers/ui/provider-api-section';
+import { ProviderEditorHero } from '@/features/providers/ui/provider-editor-hero';
+import { ProviderModelEditorModal } from '@/features/providers/ui/provider-model-editor-modal';
+import { ProviderModelsSection } from '@/features/providers/ui/provider-models-section';
 import { useTheme } from '@/hooks/use-theme';
 import type {
   ProviderConfig,
@@ -128,7 +123,11 @@ export function ProviderEditorForm({
 
   if (!editor.isApiKeyLoaded) {
     return (
-      <View style={[styles.stateScreen, { backgroundColor: theme.background }]}>
+      <View
+        style={[
+          styles.stateScreen,
+          { backgroundColor: theme.background },
+        ]}>
         <ScreenState loading title="读取供应商" />
       </View>
     );
@@ -146,28 +145,10 @@ export function ProviderEditorForm({
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
-        <Surface radius={Radius.panel} style={styles.hero}>
-          <ProviderMark
-            borderRadius={Radius.panel}
-            name={editor.name || '?'}
-            providerId={editor.providerId || 'custom'}
-            size={48}
-          />
-          <View style={styles.heroCopy}>
-            <ThemedText
-              type="smallBold"
-              numberOfLines={1}
-              style={styles.heroName}>
-              {editor.name || '自定义供应商'}
-            </ThemedText>
-            <ThemedText
-              type="small"
-              themeColor="textSecondary"
-              numberOfLines={1}>
-              {editor.providerId || 'custom'}
-            </ThemedText>
-          </View>
-        </Surface>
+        <ProviderEditorHero
+          name={editor.name}
+          providerId={editor.providerId}
+        />
 
         <FormSection title="供应商">
           <TextField
@@ -192,102 +173,31 @@ export function ProviderEditorForm({
           ) : null}
         </FormSection>
 
-        <FormSection title="API">
-          <FormField label="API Key">
-            <TextField
-              autoCapitalize="none"
-              autoCorrect={false}
-              mono
-              onChangeText={editor.setApiKey}
-              placeholder="输入 API Key"
-              secureTextEntry={!editor.showApiKey}
-              trailing={
-                <Pressable
-                  accessibilityLabel={
-                    editor.showApiKey ? '隐藏 API Key' : '显示 API Key'
-                  }
-                  accessibilityRole="button"
-                  hitSlop={8}
-                  onPress={() =>
-                    editor.setShowApiKey((currentValue) => !currentValue)
-                  }>
-                  <SymbolView
-                    name={
-                      editor.showApiKey
-                        ? { ios: 'eye.slash.fill', android: 'visibility_off' }
-                        : { ios: 'eye.fill', android: 'visibility' }
-                    }
-                    size={17}
-                    tintColor={theme.textSecondary}
-                  />
-                </Pressable>
-              }
-              value={editor.apiKey}
-            />
-            {editor.keyLoadError ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                无法读取已保存的密钥
-              </ThemedText>
-            ) : null}
-          </FormField>
+        <ProviderApiSection
+          api={editor.api}
+          apiKey={editor.apiKey}
+          keyLoadError={editor.keyLoadError}
+          onChangeApi={editor.setApi}
+          onChangeApiKey={editor.setApiKey}
+          onToggleApiKeyVisibility={() =>
+            editor.setShowApiKey((currentValue) => !currentValue)
+          }
+          showApiKey={editor.showApiKey}
+        />
 
-          <ProviderApiField onChange={editor.setApi} value={editor.api} />
-        </FormSection>
-
-        <FormSection title="模型">
-          <View style={styles.modelActions}>
-            <Button
-              label="添加模型"
-              leadingIcon={
-                <SymbolView
-                  name={{ ios: 'plus', android: 'add' }}
-                  size={13}
-                  tintColor={theme.accent}
-                />
-              }
-              onPress={editor.models.openAddModel}
-              size="compact"
-              variant="soft"
-            />
-
-            {editor.canFetchModels ? (
-              <Button
-                label="获取模型"
-                leadingIcon={
-                  editor.isFetchingModels ? undefined : (
-                    <SymbolView
-                      name={{ ios: 'arrow.clockwise', android: 'refresh' }}
-                      size={13}
-                      tintColor={theme.accent}
-                    />
-                  )
-                }
-                loading={editor.isFetchingModels}
-                onPress={() => {
-                  void handleFetchModels();
-                }}
-                size="compact"
-                variant="soft"
-              />
-            ) : null}
-          </View>
-
-          {editor.models.visibleModelOptions.length > 0 ? (
-            <SelectableChipGroup
-              onLongPress={editor.models.openModelEditor}
-              onRemove={editor.models.removeModel}
-              onToggle={editor.models.toggleModel}
-              options={editor.models.visibleModelOptions.map((model) => ({
-                label: model.id,
-                value: model.id,
-              }))}
-              removable
-              selectedValues={editor.models.selectedModels.map(
-                (model) => model.id,
-              )}
-            />
-          ) : null}
-        </FormSection>
+        <ProviderModelsSection
+          canFetchModels={editor.canFetchModels}
+          fetchingModels={editor.isFetchingModels}
+          onAddModel={editor.models.openAddModel}
+          onFetchModels={() => {
+            void handleFetchModels();
+          }}
+          onLongPressModel={editor.models.openModelEditor}
+          onRemoveModel={editor.models.removeModel}
+          onToggleModel={editor.models.toggleModel}
+          selectedModels={editor.models.selectedModels}
+          visibleModelOptions={editor.models.visibleModelOptions}
+        />
 
         <FormSection title="端点">
           <TextField
@@ -345,25 +255,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: Layout.formPadding,
     paddingTop: Layout.formPadding,
     gap: Layout.formPadding,
-  },
-  hero: {
-    minHeight: 72,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  heroCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  heroName: {
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  modelActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: Spacing.two,
   },
 });

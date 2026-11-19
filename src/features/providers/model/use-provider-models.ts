@@ -41,6 +41,8 @@ export function useProviderModels({
   const [draft, setDraft] = useState<ProviderModelDraft | null>(null);
 
   useEffect(() => {
+    // Preset models load asynchronously and enrich the editable model list.
+    /* eslint-disable react-hooks/set-state-in-effect */
     setModelOptions((currentOptions) => {
       const optionsById = new Map(
         currentOptions.map((option) => [option.id, option] as const),
@@ -82,6 +84,7 @@ export function useProviderModels({
 
       return hasChanged ? nextModels : currentModels;
     });
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [presetModels]);
 
   const modelsById = useMemo(

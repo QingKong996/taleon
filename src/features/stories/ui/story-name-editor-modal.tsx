@@ -13,11 +13,11 @@ import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/form';
 import { Layout, Radius } from '@/constants/theme';
+import { normalizeStoryTitle } from '@/features/stories/model/story-title';
 import {
   MAX_STORY_TITLE_LENGTH,
-  normalizeStoryTitle,
   type StorySummary,
-} from '@/features/stories/model/story-storage';
+} from '@/features/stories/model/story-types';
 import { useTheme } from '@/hooks/use-theme';
 
 type StoryNameEditorModalProps = {
