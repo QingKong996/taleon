@@ -238,16 +238,20 @@ export function useProviderModels({
   }
 
   return {
-    addModelIds,
-    closeModelEditor,
-    draft,
-    openAddModel,
-    openModelEditor,
-    removeModel,
-    saveModelDraft,
-    selectedModels,
-    setDraft,
-    toggleModel,
-    visibleModelOptions,
+    draft: {
+      close: closeModelEditor,
+      openAdd: openAddModel,
+      openEdit: openModelEditor,
+      save: saveModelDraft,
+      set: setDraft,
+      value: draft,
+    },
+    list: {
+      addModelIds,
+      removeModel,
+      selectedModels,
+      toggleModel,
+      visibleModelOptions,
+    },
   };
 }

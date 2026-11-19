@@ -8,7 +8,7 @@ import { getProviderBaseUrl } from '@/lib/provider/api';
 import type { ProviderConfig } from '@/lib/provider/config';
 import { useProviderSettings } from '@/providers/provider-settings';
 
-type CatalogStatus = 'error' | 'loading' | 'ready';
+export type ProviderCatalogStatus = 'error' | 'loading' | 'ready';
 
 export type ProviderCatalogItem = {
   baseUrl?: string;
@@ -35,7 +35,8 @@ export function useProviderCatalog() {
   const { configs, isReady } = useProviderSettings();
   const [providers, setProviders] = useState<ModelsDevProvider[]>([]);
   const [reloadKey, setReloadKey] = useState(0);
-  const [status, setStatus] = useState<CatalogStatus>('loading');
+  const [status, setStatus] =
+    useState<ProviderCatalogStatus>('loading');
 
   useEffect(() => {
     const controller = new AbortController();
