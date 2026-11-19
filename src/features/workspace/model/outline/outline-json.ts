@@ -1,136 +1,19 @@
+import { jsonrepair } from 'jsonrepair';
+
 import {
   isRecord,
   type UnknownRecord,
 } from '@/features/workspace/model/outline/record-utils';
 
-function escapeControlCharactersInStrings(value: string) {
-  let result = '';
-  let escaped = false;
-  let inString = false;
-
-  for (const character of value) {
-    if (!inString) {
-      result += character;
-
-      if (character === '"') {
-        inString = true;
-      }
-
-      continue;
-    }
-
-    if (escaped) {
-      result += character;
-      escaped = false;
-      continue;
-    }
-
-    if (character === '\\') {
-      result += character;
-      escaped = true;
-      continue;
-    }
-
-    if (character === '"') {
-      result += character;
-      inString = false;
-      continue;
-    }
-
-    if (character === '\n') {
-      result += '\\n';
-      continue;
-    }
-
-    if (character === '\r') {
-      result += '\\r';
-      continue;
-    }
-
-    if (character === '\t') {
-      result += '\\t';
-      continue;
-    }
-
-    if (character.charCodeAt(0) < 0x20) {
-      result += `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`;
-      continue;
-    }
-
-    result += character;
-  }
-
-  return result;
-}
-
-function removeTrailingCommas(value: string) {
-  let result = '';
-  let escaped = false;
-  let inString = false;
-
-  for (let index = 0; index < value.length; index += 1) {
-    const character = value[index];
-
-    if (!inString) {
-      if (character === '"') {
-        inString = true;
-        result += character;
-        continue;
-      }
-
-      if (character === ',') {
-        let nextIndex = index + 1;
-
-        while (/\s/.test(value[nextIndex] ?? '')) {
-          nextIndex += 1;
-        }
-
-        if (value[nextIndex] === '}' || value[nextIndex] === ']') {
-          continue;
-        }
-      }
-
-      result += character;
-      continue;
-    }
-
-    if (escaped) {
-      result += character;
-      escaped = false;
-      continue;
-    }
-
-    if (character === '\\') {
-      result += character;
-      escaped = true;
-      continue;
-    }
-
-    if (character === '"') {
-      inString = false;
-    }
-
-    result += character;
-  }
-
-  return result;
-}
-
 function parseJsonText(value: string) {
   try {
     return JSON.parse(value) as unknown;
   } catch {
-    // Try the lightweight syntax repairs below.
-  }
-
-  const repaired = removeTrailingCommas(
-    escapeControlCharactersInStrings(value),
-  );
-
-  try {
-    return JSON.parse(repaired) as unknown;
-  } catch {
-    return undefined;
+    try {
+      return JSON.parse(jsonrepair(value)) as unknown;
+    } catch {
+      return undefined;
+    }
   }
 }
 
@@ -214,7 +97,9 @@ export function scanRecords(
   const records: UnknownRecord[] = [];
 
   for (const span of findObjectSpans(text)) {
-    const candidate = parseJsonText(text.slice(span.start, span.end + 1));
+    const candidate = parseJsonText(
+      text.slice(span.start, span.end + 1),
+    );
 
     if (isRecord(candidate) && isCandidate(candidate)) {
       records.push(candidate);
