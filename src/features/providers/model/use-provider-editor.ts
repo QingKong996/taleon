@@ -115,7 +115,7 @@ export function useProviderEditor({
           baseUrl: normalizedBaseUrl,
           custom: initialCustom,
           id: existingConfig?.id,
-          models: models.selectedModels,
+          models: models.list.selectedModels,
           name,
           providerId: initialCustom
             ? providerId
@@ -146,7 +146,7 @@ export function useProviderEditor({
         baseUrl,
       });
 
-      models.addModelIds(modelIds);
+      models.list.addModelIds(modelIds);
     } finally {
       setIsFetchingModels(false);
     }
@@ -167,27 +167,39 @@ export function useProviderEditor({
     }
   }
 
+  function toggleApiKeyVisibility() {
+    setShowApiKey((currentValue) => !currentValue);
+  }
+
   return {
-    api,
-    apiKey,
-    baseUrl,
-    canFetchModels,
-    fetchModels,
-    isApiKeyLoaded,
-    isFetchingModels,
-    isSaving,
-    keyLoadError,
+    actions: {
+      fetchModels,
+      remove,
+      save,
+    },
+    connection: {
+      api,
+      apiKey,
+      baseUrl,
+      keyLoadError,
+      setApi,
+      setApiKey,
+      setBaseUrl,
+      showApiKey,
+      toggleApiKeyVisibility,
+    },
+    identity: {
+      name,
+      providerId,
+      setName,
+      setProviderId,
+    },
     models,
-    name,
-    providerId,
-    remove,
-    save,
-    setApi,
-    setApiKey,
-    setBaseUrl,
-    setName,
-    setProviderId,
-    setShowApiKey,
-    showApiKey,
+    status: {
+      canFetchModels,
+      isApiKeyLoaded,
+      isFetchingModels,
+      isSaving,
+    },
   };
 }

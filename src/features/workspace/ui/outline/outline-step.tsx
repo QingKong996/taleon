@@ -1,9 +1,5 @@
 import { SymbolView } from 'expo-symbols';
-import {
-  ActivityIndicator,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/themed-text';
@@ -13,10 +9,10 @@ import type {
   StoryOutlineSection,
 } from '@/features/workspace/model/workbench-data';
 import { OutlineEditorModal } from '@/features/workspace/ui/outline/outline-editor-modal';
-import { formatMissingChapters } from '@/features/workspace/ui/outline/outline-format';
+import { OutlineGenerationControl } from '@/features/workspace/ui/outline/outline-generation-control';
 import { OutlineIdeaCard } from '@/features/workspace/ui/outline/outline-idea-card';
 import { OutlinePlanCard } from '@/features/workspace/ui/outline/outline-plan-card';
-import { OutlinePreview } from '@/features/workspace/ui/outline/outline-preview';
+import { OutlineResultSection } from '@/features/workspace/ui/outline/outline-result-section';
 import { useOutlineWorkflow } from '@/features/workspace/ui/outline/use-outline-workflow';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -71,7 +67,7 @@ export function OutlineStep({
   wordsPerChapter,
 }: OutlineStepProps) {
   const theme = useTheme();
-  const workflow = useOutlineWorkflow({
+  const { editor, generation } = useOutlineWorkflow({
     appliedOutline,
     chapterCount,
     chapterRange,
@@ -82,8 +78,7 @@ export function OutlineStep({
     onUpdateSectionOutline,
     wordsPerChapter,
   });
-  const selectedChapterCount =
-    chapterRange[1] - chapterRange[0] + 1;
+  const { actions, result, status } = generation;
 
   return (
     <View style={styles.stepBody}>
@@ -97,7 +92,7 @@ export function OutlineStep({
       </View>
 
       <OutlineIdeaCard
-        disabled={workflow.isGenerating}
+        disabled={status.isGenerating}
         idea={idea}
         onEdit={onEditIdea}
       />
@@ -105,136 +100,50 @@ export function OutlineStep({
       <OutlinePlanCard
         chapterCount={chapterCount}
         chapterRange={chapterRange}
-        disabled={workflow.isGenerating}
+        disabled={status.isGenerating}
         onChangeChapterCount={onChangeChapterCount}
         onChangeChapterRange={onChangeChapterRange}
         onChangeWordsPerChapter={onChangeWordsPerChapter}
         wordsPerChapter={wordsPerChapter}
       />
 
-      <Button
-        align="between"
-        disabled={!workflow.canGenerate}
-        label={
-          workflow.isGeneratingOutline
-            ? '正在生成大纲…'
-            : `${workflow.displayedChapters.length > 0 ? '重新生成' : '生成'}${workflow.rangeLabel}大纲`
-        }
-        loading={workflow.isGeneratingOutline}
-        onPress={() => {
-          void workflow.generateOutlineDraft();
+      <OutlineGenerationControl
+        canGenerate={status.canGenerate}
+        generationLabel={status.generationLabel}
+        hasChapters={result.chapters.length > 0}
+        isGenerating={status.isGenerating}
+        isGeneratingOutline={status.isGeneratingOutline}
+        onGenerate={() => {
+          void actions.generateOutlineDraft();
         }}
-        size="compact"
-        trailingIcon={
-          <SymbolView
-            name={{ ios: 'sparkles', android: 'auto_awesome' }}
-            size={15}
-            tintColor={
-              workflow.canGenerate
-                ? theme.background
-                : theme.textSecondary
-            }
-          />
-        }
+        rangeLabel={result.rangeLabel}
       />
 
-      {workflow.isGenerating ? (
-        <View style={styles.generatingStatus}>
-          <ActivityIndicator color={theme.accent} size="small" />
-          <ThemedText type="small" themeColor="textSecondary">
-            {workflow.generationLabel}
-          </ThemedText>
-        </View>
-      ) : null}
-
-      {workflow.displayedChapters.length > 0 ? (
-        <View style={styles.resultSection}>
-          <View style={styles.resultHeader}>
-            <View style={styles.resultHeading}>
-              <ThemedText type="smallBold">
-                {workflow.hasPreview ? '生成结果' : '当前大纲'}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {workflow.hasPreview
-                  ? `${workflow.displayRangeLabel} · 已解析 ${workflow.previewChapterCount}/${workflow.previewExpectedCount} 章`
-                  : `已生成 ${workflow.displayedChapters.length}/${selectedChapterCount} 章`}
-              </ThemedText>
-            </View>
-            <View style={styles.resultActions}>
-              {workflow.hasPreview ? (
-                <>
-                  <Button
-                    disabled={workflow.isGenerating}
-                    label="撤销"
-                    onPress={workflow.discardPreview}
-                    size="compact"
-                    variant="secondary"
-                  />
-                  <Button
-                    disabled={workflow.isGenerating}
-                    label={
-                      workflow.previewChapterCount ===
-                      workflow.previewExpectedCount
-                        ? '应用'
-                        : `应用 ${workflow.previewChapterCount} 章`
-                    }
-                    onPress={workflow.applyOutlineDraft}
-                    size="compact"
-                  />
-                </>
-              ) : canUndoOutline ? (
-                <Button
-                  disabled={workflow.isGenerating}
-                  label="撤销"
-                  onPress={onUndoOutline}
-                  size="compact"
-                  variant="secondary"
-                />
-              ) : null}
-            </View>
-          </View>
-
-          {workflow.hasPreview &&
-          !workflow.isGenerating &&
-          workflow.missingChapterNumbers.length > 0 ? (
-            <ThemedText
-              type="small"
-              themeColor="textSecondary"
-              style={styles.partialHint}>
-              缺少章节：
-              {formatMissingChapters(workflow.missingChapterNumbers)}
-            </ThemedText>
-          ) : null}
-
-          <OutlinePreview
-            chapters={workflow.displayedChapters}
-            disabled={workflow.isGenerating}
-            generatingSectionsChapter={
-              workflow.generatingSectionsChapter
-            }
-            onEditChapter={
-              workflow.hasPreview
-                ? undefined
-                : workflow.openChapterEditor
-            }
-            onEditSection={
-              workflow.hasPreview
-                ? undefined
-                : workflow.openSectionEditor
-            }
-            onGenerateSections={
-              workflow.hasPreview
-                ? undefined
-                : (chapterNumber, sectionCount) => {
-                    void workflow.generateChapterSections(
-                      chapterNumber,
-                      sectionCount,
-                    );
-                  }
-            }
-          />
-        </View>
-      ) : !workflow.isGenerating ? (
+      {result.chapters.length > 0 ? (
+        <OutlineResultSection
+          canUndoOutline={canUndoOutline}
+          chapters={result.chapters}
+          disabled={status.isGenerating}
+          displayRangeLabel={result.displayRangeLabel}
+          expectedChapterCount={result.expectedChapterCount}
+          generatingSectionsChapter={status.generatingSectionsChapter}
+          hasPreview={result.hasPreview}
+          missingChapterNumbers={result.missingChapterNumbers}
+          onApplyOutlineDraft={actions.applyOutlineDraft}
+          onDiscardPreview={actions.discardPreview}
+          onEditChapter={editor.actions.openChapter}
+          onEditSection={editor.actions.openSection}
+          onGenerateSections={(chapterNumber, sectionCount) => {
+            void actions.generateChapterSections(
+              chapterNumber,
+              sectionCount,
+            );
+          }}
+          onUndoOutline={onUndoOutline}
+          previewChapterCount={result.previewChapterCount}
+          previewExpectedCount={result.previewExpectedCount}
+        />
+      ) : !status.isGenerating ? (
         <View style={styles.emptyState}>
           <ThemedText type="small" themeColor="textSecondary">
             当前范围还没有生成大纲
@@ -244,7 +153,7 @@ export function OutlineStep({
 
       <Button
         align="between"
-        disabled={appliedOutline.length === 0 || workflow.isGenerating}
+        disabled={appliedOutline.length === 0 || status.isGenerating}
         label="进入章节内容"
         onPress={onOpenChapter}
         trailingIcon={
@@ -252,7 +161,7 @@ export function OutlineStep({
             name={{ ios: 'arrow.right', android: 'arrow_forward' }}
             size={16}
             tintColor={
-              appliedOutline.length > 0 && !workflow.isGenerating
+              appliedOutline.length > 0 && !status.isGenerating
                 ? theme.background
                 : theme.textSecondary
             }
@@ -261,9 +170,9 @@ export function OutlineStep({
       />
 
       <OutlineEditorModal
-        onClose={workflow.closeEditor}
-        onSave={workflow.saveOutlineEditor}
-        target={workflow.editorTarget}
+        onClose={editor.actions.close}
+        onSave={editor.actions.save}
+        target={editor.target}
       />
     </View>
   );
@@ -283,35 +192,6 @@ const styles = StyleSheet.create({
   introCopy: {
     fontSize: 13,
     lineHeight: 18,
-  },
-  generatingStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-    paddingVertical: 4,
-  },
-  resultSection: {
-    gap: 7,
-  },
-  resultHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  resultHeading: {
-    flex: 1,
-    gap: 1,
-  },
-  resultActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  partialHint: {
-    fontSize: 11,
-    lineHeight: 16,
   },
   emptyState: {
     alignItems: 'center',
