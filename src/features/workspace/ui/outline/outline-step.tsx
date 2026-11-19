@@ -1,5 +1,9 @@
 import { SymbolView } from 'expo-symbols';
-import { StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/themed-text';
@@ -9,7 +13,6 @@ import type {
   StoryOutlineSection,
 } from '@/features/workspace/model/workbench-data';
 import { OutlineEditorModal } from '@/features/workspace/ui/outline/outline-editor-modal';
-import { OutlineGenerationControl } from '@/features/workspace/ui/outline/outline-generation-control';
 import { OutlineIdeaCard } from '@/features/workspace/ui/outline/outline-idea-card';
 import { OutlinePlanCard } from '@/features/workspace/ui/outline/outline-plan-card';
 import { OutlineResultSection } from '@/features/workspace/ui/outline/outline-result-section';
@@ -107,17 +110,40 @@ export function OutlineStep({
         wordsPerChapter={wordsPerChapter}
       />
 
-      <OutlineGenerationControl
-        canGenerate={status.canGenerate}
-        generationLabel={status.generationLabel}
-        hasChapters={result.chapters.length > 0}
-        isGenerating={status.isGenerating}
-        isGeneratingOutline={status.isGeneratingOutline}
-        onGenerate={() => {
+      <Button
+        align="between"
+        disabled={!status.canGenerate}
+        label={
+          status.isGeneratingOutline
+            ? '正在生成大纲…'
+            : `${result.chapters.length > 0 ? '重新生成' : '生成'}${result.rangeLabel}大纲`
+        }
+        loading={status.isGeneratingOutline}
+        onPress={() => {
           void actions.generateOutlineDraft();
         }}
-        rangeLabel={result.rangeLabel}
+        size="compact"
+        trailingIcon={
+          <SymbolView
+            name={{ ios: 'sparkles', android: 'auto_awesome' }}
+            size={15}
+            tintColor={
+              status.canGenerate
+                ? theme.background
+                : theme.textSecondary
+            }
+          />
+        }
       />
+
+      {status.isGenerating ? (
+        <View style={styles.generatingStatus}>
+          <ActivityIndicator color={theme.accent} size="small" />
+          <ThemedText type="small" themeColor="textSecondary">
+            {status.generationLabel}
+          </ThemedText>
+        </View>
+      ) : null}
 
       {result.chapters.length > 0 ? (
         <OutlineResultSection
@@ -192,6 +218,13 @@ const styles = StyleSheet.create({
   introCopy: {
     fontSize: 13,
     lineHeight: 18,
+  },
+  generatingStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingVertical: 4,
   },
   emptyState: {
     alignItems: 'center',

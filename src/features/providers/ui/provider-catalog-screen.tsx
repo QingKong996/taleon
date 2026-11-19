@@ -2,16 +2,17 @@ import { router } from 'expo-router';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/ui/button';
 import { ScreenState } from '@/components/ui/screen-state';
 import { SearchField } from '@/components/ui/search-field';
 import { Layout, Spacing } from '@/constants/theme';
 import {
   useProviderCatalog,
   type ProviderCatalogItem,
+  type ProviderCatalogStatus,
   type SavedProviderItem,
 } from '@/features/providers/model/use-provider-catalog';
 import { ProviderCatalogHeader } from '@/features/providers/ui/provider-catalog-header';
-import { ProviderCatalogListState } from '@/features/providers/ui/provider-catalog-list-state';
 import { ProviderCatalogTile } from '@/features/providers/ui/provider-catalog-tile';
 import { useProviderCatalogSearch } from '@/features/providers/ui/use-provider-catalog-search';
 import { useTheme } from '@/hooks/use-theme';
@@ -99,12 +100,7 @@ export function ProviderCatalogScreen() {
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         keyExtractor={(provider) => provider.providerId}
-        ListEmptyComponent={
-          <ProviderCatalogListState
-            onRetry={retry}
-            status={status}
-          />
-        }
+        ListEmptyComponent={renderCatalogListState(status, retry)}
         ListHeaderComponent={
           <ProviderCatalogHeader
             catalogCountLabel={catalogCountLabel}
@@ -135,6 +131,46 @@ function ProviderSeparator() {
   return <View style={styles.separator} />;
 }
 
+function renderCatalogListState(
+  status: ProviderCatalogStatus,
+  onRetry: () => void,
+) {
+  if (status === 'loading') {
+    return (
+      <ScreenState
+        description="正在从 models.dev 获取模型列表"
+        loading
+        style={styles.listState}
+      />
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <ScreenState
+        action={
+          <Button
+            label="重试"
+            onPress={onRetry}
+            size="compact"
+            variant="soft"
+          />
+        }
+        description="请检查网络连接后重试"
+        style={styles.listState}
+        title="无法加载供应商"
+      />
+    );
+  }
+
+  return (
+    <ScreenState
+      description="没有匹配的供应商"
+      style={styles.listState}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -158,5 +194,10 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 5,
+  },
+  listState: {
+    flex: 0,
+    minHeight: 180,
+    paddingVertical: 32,
   },
 });
