@@ -114,18 +114,27 @@ export function useIdeaStep({
   }
 
   return {
-    addedIdea,
-    canGenerate,
-    discardContinuation,
-    displayedIdea,
-    generateIdea,
-    hasIdea,
-    isAwaitingDecision,
-    isGenerating,
-    isLocked,
-    isReady,
-    keepContinuation,
-    setEditing: setIsEditing,
-    showEditor,
+    actions: {
+      onDiscardContinuation: discardContinuation,
+      onGenerate: () => {
+        void generateIdea();
+      },
+      onIdeaChange: onChangeIdea,
+      onKeepContinuation: keepContinuation,
+      onStartEditing: () => setIsEditing(true),
+      onStopEditing: () => setIsEditing(false),
+    },
+    state: {
+      addedIdea,
+      canGenerate,
+      displayedIdea,
+      hasIdea,
+      idea,
+      isAwaitingDecision,
+      isGenerating,
+      isLocked,
+      isReady,
+      showEditor,
+    },
   };
 }
