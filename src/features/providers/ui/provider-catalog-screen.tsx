@@ -1,21 +1,20 @@
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
-import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
 import { ScreenState } from '@/components/ui/screen-state';
 import { SearchField } from '@/components/ui/search-field';
-import { SectionHeader } from '@/components/ui/section-header';
-import { ThemedText } from '@/components/themed-text';
 import { Layout, Spacing } from '@/constants/theme';
-import { ProviderCatalogTile } from '@/features/providers/ui/provider-catalog-tile';
 import {
   useProviderCatalog,
   type ProviderCatalogItem,
+  type ProviderCatalogStatus,
   type SavedProviderItem,
 } from '@/features/providers/model/use-provider-catalog';
+import { ProviderCatalogHeader } from '@/features/providers/ui/provider-catalog-header';
+import { ProviderCatalogTile } from '@/features/providers/ui/provider-catalog-tile';
+import { useProviderCatalogSearch } from '@/features/providers/ui/use-provider-catalog-search';
 import { useTheme } from '@/hooks/use-theme';
 
 export function ProviderCatalogScreen() {
@@ -23,32 +22,12 @@ export function ProviderCatalogScreen() {
   const insets = useSafeAreaInsets();
   const { configs, isReady, providerItems, retry, savedItems, status } =
     useProviderCatalog();
-  const [query, setQuery] = useState('');
-  const normalizedQuery = query.trim().toLowerCase();
-
-  const visibleProviders = useMemo(() => {
-    if (!normalizedQuery) {
-      return providerItems;
-    }
-
-    return providerItems.filter(
-      (provider) =>
-        provider.name.toLowerCase().includes(normalizedQuery) ||
-        provider.providerId.toLowerCase().includes(normalizedQuery),
-    );
-  }, [normalizedQuery, providerItems]);
-
-  const visibleSavedItems = useMemo(() => {
-    if (!normalizedQuery) {
-      return savedItems;
-    }
-
-    return savedItems.filter(
-      (provider) =>
-        provider.name.toLowerCase().includes(normalizedQuery) ||
-        provider.providerId.toLowerCase().includes(normalizedQuery),
-    );
-  }, [normalizedQuery, savedItems]);
+  const {
+    query,
+    setQuery,
+    visibleProviders,
+    visibleSavedItems,
+  } = useProviderCatalogSearch({ providerItems, savedItems });
 
   function openAddProvider() {
     router.push({
@@ -121,85 +100,15 @@ export function ProviderCatalogScreen() {
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         keyExtractor={(provider) => provider.providerId}
-        ListEmptyComponent={
-          status === 'loading' ? (
-            <ScreenState
-              description="正在从 models.dev 获取模型列表"
-              loading
-              style={styles.listState}
-            />
-          ) : status === 'error' ? (
-            <ScreenState
-              action={
-                <Button
-                  label="重试"
-                  onPress={retry}
-                  size="compact"
-                  variant="soft"
-                />
-              }
-              description="请检查网络连接后重试"
-              style={styles.listState}
-              title="无法加载供应商"
-            />
-          ) : (
-            <ScreenState
-              description="没有匹配的供应商"
-              style={styles.listState}
-            />
-          )
-        }
+        ListEmptyComponent={renderCatalogListState(status, retry)}
         ListHeaderComponent={
-          <>
-            <View style={styles.savedSection}>
-              <SectionHeader
-                detail={`${visibleSavedItems.length} 个`}
-                title="已保存供应商"
-              />
-              {visibleSavedItems.length > 0 ? (
-                <View style={styles.savedGrid}>
-                  {visibleSavedItems.map((item) => (
-                    <View key={item.configId} style={styles.gridItem}>
-                      <ProviderCatalogTile
-                        item={item}
-                        onPress={() => openSavedProvider(item)}
-                        saved
-                      />
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <ThemedText
-                  type="small"
-                  themeColor="textSecondary"
-                  style={styles.savedEmpty}>
-                  {savedEmptyLabel}
-                </ThemedText>
-              )}
-            </View>
-
-            <View style={styles.catalogHeader}>
-              <SectionHeader
-                action={
-                  <Button
-                    label="自定义"
-                    leadingIcon={
-                      <SymbolView
-                        name={{ ios: 'plus', android: 'add' }}
-                        size={12}
-                        tintColor={theme.accent}
-                      />
-                    }
-                    onPress={openAddProvider}
-                    size="compact"
-                    variant="soft"
-                  />
-                }
-                detail={catalogCountLabel}
-                title="全部供应商"
-              />
-            </View>
-          </>
+          <ProviderCatalogHeader
+            catalogCountLabel={catalogCountLabel}
+            onAddProvider={openAddProvider}
+            onOpenSavedProvider={openSavedProvider}
+            savedEmptyLabel={savedEmptyLabel}
+            savedItems={visibleSavedItems}
+          />
         }
         maxToRenderPerBatch={16}
         numColumns={2}
@@ -220,6 +129,46 @@ export function ProviderCatalogScreen() {
 
 function ProviderSeparator() {
   return <View style={styles.separator} />;
+}
+
+function renderCatalogListState(
+  status: ProviderCatalogStatus,
+  onRetry: () => void,
+) {
+  if (status === 'loading') {
+    return (
+      <ScreenState
+        description="正在从 models.dev 获取模型列表"
+        loading
+        style={styles.listState}
+      />
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <ScreenState
+        action={
+          <Button
+            label="重试"
+            onPress={onRetry}
+            size="compact"
+            variant="soft"
+          />
+        }
+        description="请检查网络连接后重试"
+        style={styles.listState}
+        title="无法加载供应商"
+      />
+    );
+  }
+
+  return (
+    <ScreenState
+      description="没有匹配的供应商"
+      style={styles.listState}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
@@ -245,22 +194,6 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 5,
-  },
-  savedSection: {
-    gap: 6,
-    paddingBottom: 14,
-  },
-  savedGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: 5,
-  },
-  savedEmpty: {
-    paddingVertical: 12,
-  },
-  catalogHeader: {
-    paddingBottom: 8,
   },
   listState: {
     flex: 0,
