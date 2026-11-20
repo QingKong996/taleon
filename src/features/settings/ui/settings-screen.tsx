@@ -1,8 +1,9 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Pressable } from '@/components/gluestack/pressable';
 import { TabScrollView } from '@/components/tab-scroll-view';
 import { SectionHeader } from '@/components/ui/section-header';
 import { Surface } from '@/components/ui/surface';

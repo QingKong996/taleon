@@ -1,11 +1,11 @@
 import { SymbolView } from 'expo-symbols';
 import {
-  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
+import { Pressable } from '@/components/gluestack/pressable';
 import { TextField } from '@/components/ui/form';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
@@ -98,6 +98,7 @@ export function IdeaEditorCard({
           }
           accessibilityRole="button"
           accessibilityState={{ disabled: state.isLocked }}
+          className="data-[disabled=true]:opacity-100"
           disabled={state.isLocked}
           onPress={actions.onStartEditing}
           style={({ pressed }) => [

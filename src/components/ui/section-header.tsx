@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
+import { HStack } from '@/components/gluestack/hstack';
+import { Text } from '@/components/gluestack/text';
 
 type SectionHeaderProps = {
   action?: ReactNode;
@@ -11,36 +11,16 @@ type SectionHeaderProps = {
 
 export function SectionHeader({ action, detail, title }: SectionHeaderProps) {
   return (
-    <View style={styles.header}>
-      <View style={styles.heading}>
-        <ThemedText type="smallBold" style={styles.title}>
+    <HStack className="items-center justify-between gap-3">
+      <HStack className="items-center gap-[7px]">
+        <Text className="text-[13px] font-semibold leading-[18px] text-foreground">
           {title}
-        </ThemedText>
+        </Text>
         {detail ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {detail}
-          </ThemedText>
+          <Text className="text-sm text-muted-foreground">{detail}</Text>
         ) : null}
-      </View>
+      </HStack>
       {action}
-    </View>
+    </HStack>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  heading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  title: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-});

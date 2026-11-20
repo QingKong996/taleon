@@ -1,15 +1,11 @@
 import type { ReactNode } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  type StyleProp,
-  type TextStyle,
-  type ViewStyle,
-} from 'react-native';
+import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { Radius } from '@/constants/theme';
+import {
+  Button as GluestackButton,
+  ButtonSpinner,
+  ButtonText,
+} from '@/components/gluestack/button';
 import { useTheme } from '@/hooks/use-theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'soft';
@@ -30,6 +26,43 @@ type ButtonProps = {
   variant?: ButtonVariant;
 };
 
+const VARIANT_CLASSNAMES: Record<ButtonVariant, string> = {
+  primary: 'border-0 bg-primary',
+  secondary: 'border border-border bg-muted',
+  soft: 'border border-primary bg-accent',
+};
+
+const DISABLED_VARIANT_CLASSNAMES: Record<ButtonVariant, string> = {
+  primary: 'border-0 bg-border',
+  secondary: 'border border-border bg-card',
+  soft: 'border border-primary bg-accent',
+};
+
+const TEXT_VARIANT_CLASSNAMES: Record<ButtonVariant, string> = {
+  primary: 'text-primary-foreground',
+  secondary: 'text-foreground',
+  soft: 'text-accent-foreground',
+};
+
+const GLUESTACK_VARIANTS: Record<
+  ButtonVariant,
+  'default' | 'secondary' | 'ghost'
+> = {
+  primary: 'default',
+  secondary: 'secondary',
+  soft: 'ghost',
+};
+
+const SIZE_CLASSNAMES: Record<ButtonSize, string> = {
+  compact: 'min-h-8 gap-1.5 rounded-compact px-2.5',
+  regular: 'min-h-[46px] gap-2 rounded-control px-4',
+};
+
+const TEXT_SIZE_CLASSNAMES: Record<ButtonSize, string> = {
+  compact: 'text-xs leading-4',
+  regular: 'text-sm leading-5',
+};
+
 export function Button({
   accessibilityLabel,
   align = 'center',
@@ -45,96 +78,51 @@ export function Button({
   variant = 'primary',
 }: ButtonProps) {
   const theme = useTheme();
-  const palette = {
-    primary: {
-      backgroundColor: disabled ? theme.backgroundSelected : theme.accent,
-      borderColor: 'transparent',
-      color: disabled ? theme.textSecondary : theme.background,
-    },
-    secondary: {
-      backgroundColor: theme.backgroundElement,
-      borderColor: theme.backgroundSelected,
-      color: disabled ? theme.textSecondary : theme.text,
-    },
-    soft: {
-      backgroundColor: theme.accentSoft,
-      borderColor: theme.accent,
-      color: disabled ? theme.textSecondary : theme.accent,
-    },
-  }[variant];
+  const spinnerColor =
+    disabled
+      ? theme.textSecondary
+      : variant === 'primary'
+        ? theme.background
+        : variant === 'soft'
+          ? theme.accent
+          : theme.text;
 
   return (
-    <Pressable
+    <GluestackButton
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
+      className={[
+        disabled
+          ? DISABLED_VARIANT_CLASSNAMES[variant]
+          : VARIANT_CLASSNAMES[variant],
+        SIZE_CLASSNAMES[size],
+        align === 'between' ? 'justify-between' : 'justify-center',
+        'data-[disabled=true]:opacity-100',
+      ].join(' ')}
       disabled={disabled || loading}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        size === 'compact' ? styles.compactButton : styles.regularButton,
-        align === 'between' ? styles.between : styles.center,
-        {
-          backgroundColor: palette.backgroundColor,
-          borderColor: palette.borderColor,
-        },
-        pressed && styles.pressed,
-        style,
-      ]}>
+      size={size === 'compact' ? 'sm' : 'default'}
+      style={style}
+      variant={GLUESTACK_VARIANTS[variant]}>
       {loading ? (
-        <ActivityIndicator color={palette.color} size="small" />
+        <ButtonSpinner color={spinnerColor} />
       ) : (
         <>
           {leadingIcon}
-          <ThemedText
-            type="smallBold"
-            style={[
-              size === 'compact' ? styles.compactLabel : styles.regularLabel,
-              { color: palette.color },
-              labelStyle,
-            ]}>
+          <ButtonText
+            className={[
+              disabled
+                ? 'text-muted-foreground'
+                : TEXT_VARIANT_CLASSNAMES[variant],
+              TEXT_SIZE_CLASSNAMES[size],
+            ].join(' ')}
+            style={labelStyle}>
             {label}
-          </ThemedText>
+          </ButtonText>
           {trailingIcon}
         </>
       )}
-    </Pressable>
+    </GluestackButton>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  compactButton: {
-    minHeight: 32,
-    borderRadius: Radius.compact,
-    paddingHorizontal: 10,
-    gap: 5,
-  },
-  regularButton: {
-    minHeight: 46,
-    borderRadius: Radius.control,
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  center: {
-    justifyContent: 'center',
-  },
-  between: {
-    justifyContent: 'space-between',
-  },
-  compactLabel: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  regularLabel: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  pressed: {
-    opacity: 0.62,
-  },
-});

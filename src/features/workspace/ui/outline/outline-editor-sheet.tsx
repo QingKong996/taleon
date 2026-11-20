@@ -1,18 +1,13 @@
 import { useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView } from 'react-native';
 
+import { HStack } from '@/components/gluestack/hstack';
+import { Text } from '@/components/gluestack/text';
+import { VStack } from '@/components/gluestack/vstack';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/form';
-import { ThemedText } from '@/components/themed-text';
-import { Layout, Radius } from '@/constants/theme';
 import type { StoryOutlineEntry } from '@/features/workspace/model/workbench-data';
 import type { OutlineEditorTarget } from '@/features/workspace/ui/outline/outline-editor-target';
-import { useTheme } from '@/hooks/use-theme';
 
 type OutlineEditorSheetProps = {
   onClose: () => void;
@@ -25,13 +20,10 @@ export function OutlineEditorSheet({
   onSave,
   target,
 }: OutlineEditorSheetProps) {
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const [outline, setOutline] = useState(target.outline);
   const [title, setTitle] = useState(target.title);
   const isSection = target.kind === 'section';
-  const canSave =
-    title.trim().length > 0 && outline.trim().length > 0;
+  const canSave = title.trim().length > 0 && outline.trim().length > 0;
 
   function handleSave() {
     if (!canSave) {
@@ -45,27 +37,19 @@ export function OutlineEditorSheet({
   }
 
   return (
-    <View
-      style={[
-        styles.sheet,
-        {
-          backgroundColor: theme.backgroundElement,
-          borderColor: theme.backgroundSelected,
-          paddingBottom: insets.bottom + 16,
-        },
-      ]}>
-      <View style={styles.header}>
-        <View style={styles.heading}>
-          <ThemedText type="smallBold" style={styles.title}>
+    <>
+      <HStack className="items-center justify-between gap-3">
+        <VStack className="flex-1 gap-0.5">
+          <Text className="text-[17px] font-semibold leading-[22px] text-foreground">
             {isSection ? '编辑节大纲' : '编辑章大纲'}
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
+          </Text>
+          <Text className="text-sm text-muted-foreground">
             {isSection
               ? `第 ${target.chapterNumber} 章 · 第 ${target.sectionIndex + 1} 节`
               : `第 ${target.chapterNumber} 章`}
-          </ThemedText>
-        </View>
-        <View style={styles.headerActions}>
+          </Text>
+        </VStack>
+        <HStack className="gap-2">
           <Button
             label="取消"
             onPress={onClose}
@@ -79,11 +63,12 @@ export function OutlineEditorSheet({
             size="compact"
             variant="primary"
           />
-        </View>
-      </View>
+        </HStack>
+      </HStack>
 
       <ScrollView
-        contentContainerStyle={styles.fields}
+        className="max-h-full flex-shrink"
+        contentContainerStyle={{ gap: 16 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
         <TextField
@@ -94,61 +79,16 @@ export function OutlineEditorSheet({
           value={title}
         />
         <TextField
-          frameStyle={styles.outlineFrame}
+          frameStyle={{ minHeight: 148, alignItems: 'stretch' }}
           label={isSection ? '节大纲' : '章大纲'}
           multiline
           onChangeText={setOutline}
-          placeholder={
-            isSection ? '输入本节剧情大纲' : '输入本章剧情大纲'
-          }
-          style={styles.outlineInput}
+          placeholder={isSection ? '输入本节剧情大纲' : '输入本章剧情大纲'}
+          style={{ minHeight: 146, paddingTop: 10 }}
           textAlignVertical="top"
           value={outline}
         />
       </ScrollView>
-    </View>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  sheet: {
-    width: '92%',
-    maxWidth: 560,
-    maxHeight: '88%',
-    alignSelf: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.sheet,
-    paddingHorizontal: Layout.formPadding,
-    paddingTop: Layout.formPadding,
-    gap: 14,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  heading: {
-    flex: 1,
-    gap: 2,
-  },
-  title: {
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  fields: {
-    gap: 16,
-  },
-  outlineFrame: {
-    minHeight: 148,
-    alignItems: 'stretch',
-  },
-  outlineInput: {
-    minHeight: 146,
-    paddingTop: 10,
-  },
-});

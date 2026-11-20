@@ -1,58 +1,57 @@
-import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
+import type { TextProps } from 'react-native';
 
-import { Fonts, ThemeColor } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Text } from '@/components/gluestack/text';
+import { Fonts, type ThemeColor } from '@/constants/theme';
+
+type TextType =
+  | 'default'
+  | 'title'
+  | 'small'
+  | 'smallBold'
+  | 'subtitle'
+  | 'link'
+  | 'linkPrimary'
+  | 'code';
 
 type ThemedTextProps = TextProps & {
-  type?: 'default' | 'title' | 'small' | 'smallBold' | 'subtitle' | 'link' | 'linkPrimary' | 'code';
+  type?: TextType;
   themeColor?: ThemeColor;
 };
 
-export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
-  const theme = useTheme();
+const TYPE_CLASSNAMES: Record<TextType, string> = {
+  default: 'font-medium text-base leading-6',
+  title: 'font-medium text-[30px] leading-9 tracking-[0.2px]',
+  small: 'font-normal text-sm leading-5',
+  smallBold: 'font-semibold text-sm leading-5',
+  subtitle: 'font-semibold text-[26px] leading-8',
+  link: 'text-sm leading-[30px]',
+  linkPrimary: 'text-sm leading-[30px] text-[#3c87f7]',
+  code: 'text-xs font-medium android:font-bold',
+};
 
-  return <Text style={[{ color: theme[themeColor ?? 'text'] }, styles[type], style]} {...rest} />;
+const COLOR_CLASSNAMES: Partial<Record<ThemeColor, string>> = {
+  accent: 'text-primary',
+  success: 'text-success',
+  text: 'text-foreground',
+  textSecondary: 'text-muted-foreground',
+};
+
+export function ThemedText({
+  style,
+  type = 'default',
+  themeColor = 'text',
+  ...rest
+}: ThemedTextProps) {
+  const colorClassName =
+    type === 'linkPrimary'
+      ? undefined
+      : (COLOR_CLASSNAMES[themeColor] ?? 'text-foreground');
+
+  return (
+    <Text
+      className={`${TYPE_CLASSNAMES[type]} ${colorClassName ?? ''}`.trim()}
+      style={[type === 'code' ? { fontFamily: Fonts.mono } : null, style]}
+      {...rest}
+    />
+  );
 }
-
-const styles = StyleSheet.create({
-  small: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 400,
-  },
-  smallBold: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 600,
-  },
-  default: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: 500,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: 500,
-    lineHeight: 36,
-    letterSpacing: 0.2,
-  },
-  subtitle: {
-    fontSize: 26,
-    lineHeight: 32,
-    fontWeight: 600,
-  },
-  link: {
-    lineHeight: 30,
-    fontSize: 14,
-  },
-  linkPrimary: {
-    lineHeight: 30,
-    fontSize: 14,
-    color: '#3c87f7',
-  },
-  code: {
-    fontFamily: Fonts.mono,
-    fontWeight: Platform.select({ android: 700 }) ?? 500,
-    fontSize: 12,
-  },
-});

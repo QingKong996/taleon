@@ -1,11 +1,4 @@
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-} from 'react-native';
-
+import { BottomSheetModal } from '@/components/ui/bottom-sheet-modal';
 import type { StoryOutlineEntry } from '@/features/workspace/model/workbench-data';
 import { OutlineEditorSheet } from '@/features/workspace/ui/outline/outline-editor-sheet';
 import type { OutlineEditorTarget } from '@/features/workspace/ui/outline/outline-editor-target';
@@ -22,47 +15,20 @@ export function OutlineEditorModal({
   target,
 }: OutlineEditorModalProps) {
   return (
-    <Modal
-      animationType="fade"
-      onRequestClose={onClose}
-      transparent
-      visible={target !== null}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.modalRoot}>
-        <Pressable
-          accessibilityLabel="关闭大纲编辑"
-          accessibilityRole="button"
-          onPress={onClose}
-          style={styles.modalBackdrop}
+    <BottomSheetModal
+      accessibilityLabel="关闭大纲编辑"
+      isOpen={target !== null}
+      onClose={onClose}>
+      {target ? (
+        <OutlineEditorSheet
+          key={`${target.kind}-${target.chapterNumber}-${
+            target.kind === 'section' ? target.sectionIndex : 0
+          }`}
+          onClose={onClose}
+          onSave={onSave}
+          target={target}
         />
-
-        {target ? (
-          <OutlineEditorSheet
-            key={`${target.kind}-${target.chapterNumber}-${
-              target.kind === 'section' ? target.sectionIndex : 0
-            }`}
-            onClose={onClose}
-            onSave={onSave}
-            target={target}
-          />
-        ) : null}
-      </KeyboardAvoidingView>
-    </Modal>
+      ) : null}
+    </BottomSheetModal>
   );
 }
-
-const styles = StyleSheet.create({
-  modalRoot: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  modalBackdrop: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-});

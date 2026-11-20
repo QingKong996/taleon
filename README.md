@@ -8,7 +8,7 @@ A mobile-only Expo application for iOS and Android.
 - **TypeScript 6**
 - **Expo Router 58** for file-based navigation
 - **@expo/ui 58** for native SwiftUI and Jetpack Compose components
-- **NativeWind 4** with **Tailwind CSS 3** for styling
+- **gluestack-ui 5** with **UniWind 1** and **Tailwind CSS 4** for shared UI primitives and styling
 - **React Native Reanimated 4** and **Worklets** for animation
 
 ## Platforms

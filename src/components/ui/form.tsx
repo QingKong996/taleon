@@ -1,16 +1,19 @@
 import type { PropsWithChildren, ReactNode } from 'react';
 import {
-  StyleSheet,
-  TextInput,
-  View,
   type StyleProp,
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
 
+import {
+  FormControl,
+  FormControlLabel,
+  FormControlLabelText,
+} from '@/components/gluestack/form-control';
+import { Input, InputField, InputSlot } from '@/components/gluestack/input';
+import { VStack } from '@/components/gluestack/vstack';
 import { SectionHeader } from '@/components/ui/section-header';
 import { Surface } from '@/components/ui/surface';
-import { ThemedText } from '@/components/themed-text';
 import { Fonts, Layout, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -20,12 +23,14 @@ type FormFieldProps = PropsWithChildren<{
 
 export function FormField({ children, label }: FormFieldProps) {
   return (
-    <View style={styles.field}>
-      <ThemedText type="small" themeColor="textSecondary">
-        {label}
-      </ThemedText>
+    <FormControl className="gap-1.5">
+      <FormControlLabel className="mb-0">
+        <FormControlLabelText className="text-xs font-normal text-muted-foreground">
+          {label}
+        </FormControlLabelText>
+      </FormControlLabel>
       {children}
-    </View>
+    </FormControl>
   );
 }
 
@@ -35,12 +40,17 @@ type FormSectionProps = PropsWithChildren<{
 
 export function FormSection({ children, title }: FormSectionProps) {
   return (
-    <View style={styles.section}>
+    <VStack className="gap-2">
       <SectionHeader title={title} />
-      <Surface radius={Radius.panel} style={styles.sectionSurface}>
+      <Surface
+        radius={Radius.panel}
+        style={{
+          padding: Layout.cardPadding,
+          gap: 16,
+        }}>
         {children}
       </Surface>
-    </View>
+    </VStack>
   );
 }
 
@@ -61,64 +71,30 @@ export function TextField({
 }: TextFieldProps) {
   const theme = useTheme();
   const field = (
-    <View
-      style={[
-        styles.inputFrame,
-        trailing ? styles.inputFrameWithTrailing : undefined,
-        frameStyle,
-      ]}>
-      <TextInput
+    <Input
+      className={[
+        'min-h-[42px] rounded-control border-0 bg-field px-3 shadow-none dark:bg-field',
+        trailing ? 'gap-2 pr-2.5' : undefined,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      style={frameStyle}>
+      <InputField
+        className={[
+          'text-[15px] leading-5 text-foreground placeholder:text-muted-foreground',
+          mono ? 'text-sm' : undefined,
+          inputProps.multiline ? 'h-auto' : undefined,
+        ]
+          .filter(Boolean)
+          .join(' ')}
         placeholderTextColor={theme.textSecondary}
         selectionColor={theme.accent}
-        style={[
-          styles.input,
-          mono && styles.monoInput,
-          { color: theme.text },
-          style,
-        ]}
+        style={[mono ? { fontFamily: Fonts.mono } : null, style]}
         {...inputProps}
       />
-      {trailing}
-    </View>
+      {trailing ? <InputSlot>{trailing}</InputSlot> : null}
+    </Input>
   );
 
   return label ? <FormField label={label}>{field}</FormField> : field;
 }
-
-const styles = StyleSheet.create({
-  field: {
-    gap: 7,
-  },
-  section: {
-    gap: Layout.sectionGap,
-  },
-  sectionSurface: {
-    padding: Layout.cardPadding,
-    gap: 16,
-  },
-  inputFrame: {
-    minHeight: 42,
-    borderRadius: Radius.control,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(127, 127, 127, 0.12)',
-  },
-  inputFrameWithTrailing: {
-    paddingRight: 10,
-    gap: 8,
-  },
-  input: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 42,
-    paddingVertical: 9,
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  monoInput: {
-    fontFamily: Fonts.mono,
-    fontSize: 14,
-    lineHeight: 19,
-  },
-});

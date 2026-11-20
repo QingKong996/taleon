@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+@import 'uniwind';
+
+/* Mirror src/constants/theme.ts until legacy screen styles migrate. */
+@layer theme {
+  :root {
+    @variant light {
+      --color-background: #ffffff;
+      --color-foreground: #000000;
+      --color-card: #f0f0f3;
+      --color-card-foreground: #000000;
+      --color-popover: #f0f0f3;
+      --color-popover-foreground: #000000;
+      --color-primary: #1273ea;
+      --color-primary-foreground: #ffffff;
+      --color-secondary: #f0f0f3;
+      --color-secondary-foreground: #000000;
+      --color-muted: #f0f0f3;
+      --color-muted-foreground: #60646c;
+      --color-accent: #e8f1fc;
+      --color-accent-foreground: #1273ea;
+      --color-destructive: #dc2626;
+      --color-border: #e0e1e6;
+      --color-input: #e0e1e6;
+      --color-field: rgba(127, 127, 127, 0.12);
+      --color-ring: #1273ea;
+      --color-success: #0b6b3a;
+    }
+
+    @variant dark {
+      --color-background: #000000;
+      --color-foreground: #ffffff;
+      --color-card: #212225;
+      --color-card-foreground: #ffffff;
+      --color-popover: #212225;
+      --color-popover-foreground: #ffffff;
+      --color-primary: #5ca9ff;
+      --color-primary-foreground: #000000;
+      --color-secondary: #212225;
+      --color-secondary-foreground: #ffffff;
+      --color-muted: #212225;
+      --color-muted-foreground: #b0b4ba;
+      --color-accent: #132338;
+      --color-accent-foreground: #5ca9ff;
+      --color-destructive: #f87171;
+      --color-border: #2e3135;
+      --color-input: #2e3135;
+      --color-field: rgba(127, 127, 127, 0.12);
+      --color-ring: #5ca9ff;
+      --color-success: #2e9e63;
+    }
+  }
+}
+
+@theme {
+  --radius-compact: 9px;
+  --radius-control: 12px;
+  --radius-card: 16px;
+  --radius-panel: 18px;
+  --radius-sheet: 20px;
+}
