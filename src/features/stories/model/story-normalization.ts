@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import {
   STORY_STORAGE_VERSION,
   UNTITLED_STORY_TITLE,
@@ -17,12 +19,71 @@ import {
   type WorkbenchStep,
 } from '@/features/workspace/model/workbench-data';
 
+const unknownArraySchema = z.array(z.unknown());
+const finiteNumberSchema = z.number().refine(Number.isFinite);
+
+const storyEntrySchema = z.object({
+  outline: z.string(),
+  title: z.string(),
+});
+
+const sectionContentSchema = z.object({
+  content: z.unknown().optional(),
+});
+
+const chapterInputSchema = z.object({
+  chapterNumber: z.number().int(),
+  outline: z.string(),
+  sections: z.unknown().optional(),
+  title: z.string(),
+});
+
+const storySummarySchema = z
+  .object({
+    createdAt: finiteNumberSchema,
+    id: z.string().min(1),
+    outlineChapterCount: z.unknown().optional(),
+    selectedChapter: z.unknown().optional(),
+    step: z.unknown().optional(),
+    title: z.string(),
+    updatedAt: finiteNumberSchema,
+  })
+  .transform((story) => ({
+    createdAt: story.createdAt,
+    id: story.id,
+    outlineChapterCount:
+      typeof story.outlineChapterCount === 'number'
+        ? Math.max(0, Math.round(story.outlineChapterCount))
+        : 0,
+    selectedChapter: normalizeUnitNumber(
+      story.selectedChapter,
+      1,
+      1,
+      100,
+    ),
+    step: normalizeStep(story.step),
+    title: story.title.trim() || UNTITLED_STORY_TITLE,
+    updatedAt: story.updatedAt,
+  } satisfies StorySummary));
+
+const storyDocumentInputSchema = z.object({
+  chapterCount: z.unknown().optional(),
+  chapterRange: z.unknown().optional(),
+  createdAt: z.unknown().optional(),
+  id: z.string().min(1),
+  idea: z.unknown().optional(),
+  outline: z.unknown().optional(),
+  selectedChapter: z.unknown().optional(),
+  step: z.unknown().optional(),
+  title: z.unknown().optional(),
+  unlockedStep: z.unknown().optional(),
+  updatedAt: z.unknown().optional(),
+  version: z.literal(STORY_STORAGE_VERSION),
+  wordsPerChapter: z.unknown().optional(),
+});
+
 function clamp(value: number, lower: number, upper: number) {
   return Math.min(Math.max(value, lower), upper);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 function isWorkbenchStep(value: unknown): value is WorkbenchStep {
@@ -44,34 +105,83 @@ function normalizeUnitNumber(
     : fallback;
 }
 
+function readTimestamp(value: unknown, fallback: number) {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : fallback;
+}
+
 function normalizeEntry(value: unknown) {
-  if (!isRecord(value)) {
+  const parsed = storyEntrySchema.safeParse(value);
+
+  if (!parsed.success) {
     return null;
   }
 
-  const title = typeof value.title === 'string' ? value.title.trim() : '';
-  const outline =
-    typeof value.outline === 'string' ? value.outline.trim() : '';
+  const title = parsed.data.title.trim();
+  const outline = parsed.data.outline.trim();
 
-  if (!title || !outline) {
-    return null;
-  }
-
-  return { outline, title };
+  return title && outline ? { outline, title } : null;
 }
 
 function normalizeSection(value: unknown): StoryOutlineSection | null {
   const entry = normalizeEntry(value);
 
-  if (!entry || !isRecord(value)) {
+  if (!entry) {
     return null;
   }
 
+  const parsedContent = sectionContentSchema.safeParse(value);
+  const content = parsedContent.success
+    ? parsedContent.data.content
+    : undefined;
+
   return {
     ...entry,
-    ...(typeof value.content === 'string'
-      ? { content: value.content.trim() }
+    ...(typeof content === 'string'
+      ? { content: content.trim() }
       : {}),
+  };
+}
+
+function normalizeChapter(
+  value: unknown,
+  chapterCount: number,
+): StoryOutlineChapter | null {
+  const parsed = chapterInputSchema.safeParse(value);
+
+  if (
+    !parsed.success ||
+    parsed.data.chapterNumber < 1 ||
+    parsed.data.chapterNumber > chapterCount
+  ) {
+    return null;
+  }
+
+  const title = parsed.data.title.trim();
+  const outline = parsed.data.outline.trim();
+
+  if (!title || !outline) {
+    return null;
+  }
+
+  const parsedSections = unknownArraySchema.safeParse(
+    parsed.data.sections,
+  );
+  const sections = parsedSections.success
+    ? parsedSections.data
+        .map(normalizeSection)
+        .filter(
+          (section): section is StoryOutlineSection =>
+            section !== null,
+        )
+    : [];
+
+  return {
+    chapterNumber: parsed.data.chapterNumber,
+    outline,
+    sections,
+    title,
   };
 }
 
@@ -79,43 +189,24 @@ function normalizeOutline(
   value: unknown,
   chapterCount: number,
 ): StoryOutlineChapter[] {
-  if (!Array.isArray(value)) {
+  const parsed = unknownArraySchema.safeParse(value);
+
+  if (!parsed.success) {
     return [];
   }
 
   const chapters: StoryOutlineChapter[] = [];
   const chapterNumbers = new Set<number>();
 
-  for (const item of value) {
-    const entry = normalizeEntry(item);
+  for (const item of parsed.data) {
+    const chapter = normalizeChapter(item, chapterCount);
 
-    if (
-      !entry ||
-      !isRecord(item) ||
-      typeof item.chapterNumber !== 'number' ||
-      !Number.isInteger(item.chapterNumber) ||
-      item.chapterNumber < 1 ||
-      item.chapterNumber > chapterCount ||
-      chapterNumbers.has(item.chapterNumber)
-    ) {
+    if (!chapter || chapterNumbers.has(chapter.chapterNumber)) {
       continue;
     }
 
-    const sections = Array.isArray(item.sections)
-      ? item.sections
-          .map(normalizeSection)
-          .filter(
-            (section): section is StoryOutlineSection =>
-              section !== null,
-          )
-      : [];
-
-    chapterNumbers.add(item.chapterNumber);
-    chapters.push({
-      ...entry,
-      chapterNumber: item.chapterNumber,
-      sections,
-    });
+    chapters.push(chapter);
+    chapterNumbers.add(chapter.chapterNumber);
   }
 
   return chapters.sort(
@@ -126,94 +217,62 @@ function normalizeOutline(
 export function normalizeStorySummary(
   value: unknown,
 ): StorySummary | null {
-  if (
-    !isRecord(value) ||
-    typeof value.id !== 'string' ||
-    !value.id ||
-    typeof value.title !== 'string' ||
-    typeof value.createdAt !== 'number' ||
-    typeof value.updatedAt !== 'number'
-  ) {
-    return null;
-  }
+  const parsed = storySummarySchema.safeParse(value);
 
-  return {
-    createdAt: value.createdAt,
-    id: value.id,
-    outlineChapterCount:
-      typeof value.outlineChapterCount === 'number'
-        ? Math.max(0, Math.round(value.outlineChapterCount))
-        : 0,
-    selectedChapter: normalizeUnitNumber(value.selectedChapter, 1, 1, 100),
-    step: normalizeStep(value.step),
-    title: value.title.trim() || UNTITLED_STORY_TITLE,
-    updatedAt: value.updatedAt,
-  };
+  return parsed.success ? parsed.data : null;
 }
 
 export function normalizeStoryDocument(
   value: unknown,
 ): StoryDocument | null {
-  if (
-    !isRecord(value) ||
-    typeof value.id !== 'string' ||
-    !value.id ||
-    value.version !== STORY_STORAGE_VERSION
-  ) {
+  const parsed = storyDocumentInputSchema.safeParse(value);
+
+  if (!parsed.success) {
     return null;
   }
 
-  const createdAt =
-    typeof value.createdAt === 'number' &&
-    Number.isFinite(value.createdAt)
-      ? value.createdAt
-      : Date.now();
-  const updatedAt =
-    typeof value.updatedAt === 'number' &&
-    Number.isFinite(value.updatedAt)
-      ? value.updatedAt
-      : createdAt;
+  const story = parsed.data;
+  const createdAt = readTimestamp(story.createdAt, Date.now());
+  const updatedAt = readTimestamp(story.updatedAt, createdAt);
   const chapterCount = normalizeUnitNumber(
-    value.chapterCount,
+    story.chapterCount,
     DEFAULT_CHAPTER_COUNT,
     MIN_CHAPTER_COUNT,
     MAX_CHAPTER_COUNT,
   );
-  const storedRange = Array.isArray(value.chapterRange)
-    ? value.chapterRange
-    : [];
+  const storedRange = unknownArraySchema.safeParse(story.chapterRange);
+  const range = storedRange.success ? storedRange.data : [];
   const rangeStart = normalizeUnitNumber(
-    storedRange[0],
+    range[0],
     1,
     MIN_CHAPTER_COUNT,
     chapterCount,
   );
   const rangeEnd = normalizeUnitNumber(
-    storedRange[1],
+    range[1],
     chapterCount,
     rangeStart,
     chapterCount,
   );
-  const unlockedStep = normalizeStep(value.unlockedStep);
+  const unlockedStep = normalizeStep(story.unlockedStep);
   const step = Math.min(
-    normalizeStep(value.step),
+    normalizeStep(story.step),
     unlockedStep,
   ) as WorkbenchStep;
-  const idea = typeof value.idea === 'string' ? value.idea : '';
   const title =
-    typeof value.title === 'string'
-      ? normalizeStoryTitle(value.title)
+    typeof story.title === 'string'
+      ? normalizeStoryTitle(story.title)
       : '';
 
   return {
     chapterCount,
     chapterRange: [rangeStart, rangeEnd],
     createdAt,
-    id: value.id,
-    idea,
-    outline: normalizeOutline(value.outline, chapterCount),
+    id: story.id,
+    idea: typeof story.idea === 'string' ? story.idea : '',
+    outline: normalizeOutline(story.outline, chapterCount),
     selectedChapter: normalizeUnitNumber(
-      value.selectedChapter,
+      story.selectedChapter,
       1,
       1,
       chapterCount,
@@ -224,7 +283,7 @@ export function normalizeStoryDocument(
     updatedAt,
     version: STORY_STORAGE_VERSION,
     wordsPerChapter: normalizeUnitNumber(
-      value.wordsPerChapter,
+      story.wordsPerChapter,
       DEFAULT_WORDS_PER_CHAPTER,
       MIN_WORDS_PER_CHAPTER,
       MAX_WORDS_PER_CHAPTER,
