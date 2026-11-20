@@ -1,7 +1,7 @@
 import type { KnownApi } from '@earendil-works/pi-ai';
 import { SymbolView } from 'expo-symbols';
-import { Pressable } from 'react-native';
 
+import { Pressable } from '@/components/gluestack/pressable';
 import { FormField, FormSection, TextField } from '@/components/ui/form';
 import { ThemedText } from '@/components/themed-text';
 import { ProviderApiField } from '@/features/providers/ui/provider-api-field';

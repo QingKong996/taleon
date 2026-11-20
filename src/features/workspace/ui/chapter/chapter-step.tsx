@@ -1,10 +1,10 @@
 import { SymbolView } from 'expo-symbols';
 import {
-  ActivityIndicator,
   StyleSheet,
   View,
 } from 'react-native';
 
+import { Spinner } from '@/components/gluestack/spinner';
 import { Button } from '@/components/ui/button';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
@@ -97,7 +97,7 @@ export function ChapterStep({
 
           {workflow.isGenerating && workflow.activeGeneration ? (
             <View style={styles.generatingStatus}>
-              <ActivityIndicator color={theme.accent} size="small" />
+              <Spinner color={theme.accent} size="small" />
               <ThemedText type="small" themeColor="textSecondary">
                 正在生成第 {workflow.activeGeneration.chapterNumber} 章第{' '}
                 {workflow.activeGeneration.sectionIndex + 1} 节…

@@ -1,10 +1,10 @@
 import { SymbolView } from 'expo-symbols';
-import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { Radius } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { HStack } from '@/components/gluestack/hstack';
+import { Pressable } from '@/components/gluestack/pressable';
+import { Text } from '@/components/gluestack/text';
 import type { ThemePreference } from '@/providers/theme-preference';
+import { useTheme } from '@/hooks/use-theme';
 
 const APPEARANCE_OPTIONS = [
   {
@@ -44,12 +44,9 @@ export function AppearancePicker({
   const theme = useTheme();
 
   return (
-    <View
+    <HStack
       accessibilityLabel="外观"
-      style={[
-        styles.track,
-        { backgroundColor: theme.backgroundSelected },
-      ]}>
+      className="mx-3 mb-3 gap-0.5 rounded-control bg-border p-[3px]">
       {APPEARANCE_OPTIONS.map((option) => {
         const isSelected = value === option.value;
 
@@ -58,55 +55,28 @@ export function AppearancePicker({
             accessibilityLabel={option.label}
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected }}
+            className={[
+              'min-h-[34px] flex-1 flex-row items-center justify-center gap-1 rounded-compact px-1',
+              isSelected ? 'bg-accent' : 'bg-transparent',
+              'data-[active=true]:opacity-[0.65]',
+            ].join(' ')}
             key={option.value}
-            onPress={() => onChange(option.value)}
-            style={({ pressed }) => [
-              styles.segment,
-              isSelected && { backgroundColor: theme.accentSoft },
-              pressed && styles.pressed,
-            ]}>
+            onPress={() => onChange(option.value)}>
             <SymbolView
               name={{ ios: option.ios, android: option.android }}
               size={13}
               tintColor={isSelected ? theme.accent : theme.textSecondary}
             />
-            <ThemedText
-              type="smallBold"
-              themeColor={isSelected ? 'accent' : 'textSecondary'}
-              style={styles.label}>
+            <Text
+              className={[
+                'text-xs font-semibold leading-4',
+                isSelected ? 'text-primary' : 'text-muted-foreground',
+              ].join(' ')}>
               {option.label}
-            </ThemedText>
+            </Text>
           </Pressable>
         );
       })}
-    </View>
+    </HStack>
   );
 }
-
-const styles = StyleSheet.create({
-  track: {
-    flexDirection: 'row',
-    gap: 2,
-    marginHorizontal: 12,
-    marginBottom: 12,
-    padding: 3,
-    borderRadius: Radius.control,
-  },
-  segment: {
-    flex: 1,
-    minHeight: 34,
-    paddingHorizontal: 4,
-    borderRadius: Radius.compact,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  label: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  pressed: {
-    opacity: 0.65,
-  },
-});

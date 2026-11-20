@@ -1,6 +1,7 @@
 import { SymbolView } from 'expo-symbols';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Pressable } from '@/components/gluestack/pressable';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
@@ -67,6 +68,7 @@ export function StepProgress({
               accessibilityLabel={`${item.label}${isComplete ? '，已完成' : ''}`}
               accessibilityRole="button"
               accessibilityState={{ disabled: !isReached, selected: isActive }}
+              className="data-[disabled=true]:opacity-100"
               disabled={!isReached}
               onPress={() => onStepPress(item.step)}
               style={({ pressed }) => [

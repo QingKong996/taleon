@@ -1,24 +1,16 @@
 import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ThemedText } from '@/components/themed-text';
+import { HStack } from '@/components/gluestack/hstack';
+import { Text } from '@/components/gluestack/text';
+import { VStack } from '@/components/gluestack/vstack';
+import { BottomSheetModal } from '@/components/ui/bottom-sheet-modal';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/form';
-import { Layout, Radius } from '@/constants/theme';
 import { normalizeStoryTitle } from '@/features/stories/model/story-title';
 import {
   MAX_STORY_TITLE_LENGTH,
   type StorySummary,
 } from '@/features/stories/model/story-types';
-import { useTheme } from '@/hooks/use-theme';
 
 type StoryNameEditorModalProps = {
   isSaving: boolean;
@@ -34,37 +26,21 @@ export function StoryNameEditorModal({
   story,
 }: StoryNameEditorModalProps) {
   return (
-    <Modal
-      animationType="fade"
-      onRequestClose={() => {
-        if (!isSaving) {
-          onClose();
-        }
-      }}
-      transparent
-      visible={story !== null}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.modalRoot}>
-        <Pressable
-          accessibilityLabel="关闭故事名称编辑"
-          accessibilityRole="button"
-          disabled={isSaving}
-          onPress={onClose}
-          style={styles.modalBackdrop}
+    <BottomSheetModal
+      accessibilityLabel="关闭故事名称编辑"
+      isOpen={story !== null}
+      onClose={onClose}
+      preventClose={isSaving}>
+      {story ? (
+        <StoryNameEditorSheet
+          isSaving={isSaving}
+          key={story.id}
+          onClose={onClose}
+          onSave={onSave}
+          story={story}
         />
-
-        {story ? (
-          <StoryNameEditorSheet
-            isSaving={isSaving}
-            key={story.id}
-            onClose={onClose}
-            onSave={onSave}
-            story={story}
-          />
-        ) : null}
-      </KeyboardAvoidingView>
-    </Modal>
+      ) : null}
+    </BottomSheetModal>
   );
 }
 
@@ -81,8 +57,6 @@ function StoryNameEditorSheet({
   onSave,
   story,
 }: StoryNameEditorSheetProps) {
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const [title, setTitle] = useState(story.title);
   const normalizedTitle = normalizeStoryTitle(title);
   const canSave =
@@ -97,25 +71,17 @@ function StoryNameEditorSheet({
   }
 
   return (
-    <View
-      style={[
-        styles.modalSheet,
-        {
-          backgroundColor: theme.backgroundElement,
-          borderColor: theme.backgroundSelected,
-          paddingBottom: insets.bottom + 16,
-        },
-      ]}>
-      <View style={styles.modalHeader}>
-        <View style={styles.modalHeading}>
-          <ThemedText type="smallBold" style={styles.modalTitle}>
+    <>
+      <HStack className="items-center justify-between gap-3">
+        <VStack className="flex-1 gap-0.5">
+          <Text className="text-[17px] font-semibold leading-[22px] text-foreground">
             编辑故事名称
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
+          </Text>
+          <Text className="text-sm text-muted-foreground">
             长按故事可再次修改
-          </ThemedText>
-        </View>
-        <View style={styles.modalHeaderActions}>
+          </Text>
+        </VStack>
+        <HStack className="gap-2">
           <Button
             disabled={isSaving}
             label="取消"
@@ -131,8 +97,8 @@ function StoryNameEditorSheet({
             size="compact"
             variant="primary"
           />
-        </View>
-      </View>
+        </HStack>
+      </HStack>
 
       <TextField
         accessibilityLabel="故事名称"
@@ -145,49 +111,6 @@ function StoryNameEditorSheet({
         selectTextOnFocus
         value={title}
       />
-    </View>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  modalRoot: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  modalBackdrop: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalSheet: {
-    width: '92%',
-    maxWidth: 560,
-    alignSelf: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.sheet,
-    paddingHorizontal: Layout.formPadding,
-    paddingTop: Layout.formPadding,
-    gap: 16,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  modalHeading: {
-    flex: 1,
-    gap: 2,
-  },
-  modalTitle: {
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  modalHeaderActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-});

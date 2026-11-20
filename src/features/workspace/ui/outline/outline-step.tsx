@@ -1,10 +1,7 @@
 import { SymbolView } from 'expo-symbols';
-import {
-  ActivityIndicator,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Spinner } from '@/components/gluestack/spinner';
 import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/themed-text';
 import type {
@@ -138,7 +135,7 @@ export function OutlineStep({
 
       {status.isGenerating ? (
         <View style={styles.generatingStatus}>
-          <ActivityIndicator color={theme.accent} size="small" />
+          <Spinner color={theme.accent} size="small" />
           <ThemedText type="small" themeColor="textSecondary">
             {status.generationLabel}
           </ThemedText>

@@ -1,5 +1,6 @@
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { Spinner } from '@/components/gluestack/spinner';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
@@ -17,7 +18,7 @@ export function StoryListPlaceholder({
     <Surface style={styles.card}>
       {loading ? (
         <>
-          <ActivityIndicator color={theme.accent} size="small" />
+          <Spinner color={theme.accent} size="small" />
           <ThemedText type="small" themeColor="textSecondary">
             正在读取故事
           </ThemedText>

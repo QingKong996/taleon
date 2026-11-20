@@ -1,13 +1,9 @@
 import type { ReactNode } from 'react';
-import {
-  ActivityIndicator,
-  StyleSheet,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
+import { Spinner } from '@/components/gluestack/spinner';
+import { Text } from '@/components/gluestack/text';
+import { VStack } from '@/components/gluestack/vstack';
 import { useTheme } from '@/hooks/use-theme';
 
 type ScreenStateProps = {
@@ -28,39 +24,25 @@ export function ScreenState({
   const theme = useTheme();
 
   return (
-    <View style={[styles.state, style]}>
-      {loading ? <ActivityIndicator color={theme.accent} /> : null}
+    <VStack
+      className="flex-1 items-center justify-center gap-3 px-8"
+      style={style}>
+      {loading ? <Spinner color={theme.accent} /> : null}
       {title || description ? (
-        <View style={styles.copy}>
-          {title ? <ThemedText type="smallBold">{title}</ThemedText> : null}
-          {description ? (
-            <ThemedText
-              type="small"
-              themeColor="textSecondary"
-              style={styles.description}>
-              {description}
-            </ThemedText>
+        <VStack className="items-center gap-1">
+          {title ? (
+            <Text className="text-sm font-semibold text-foreground">
+              {title}
+            </Text>
           ) : null}
-        </View>
+          {description ? (
+            <Text className="text-center text-sm text-muted-foreground">
+              {description}
+            </Text>
+          ) : null}
+        </VStack>
       ) : null}
       {action}
-    </View>
+    </VStack>
   );
 }
-
-const styles = StyleSheet.create({
-  state: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingHorizontal: 32,
-  },
-  copy: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  description: {
-    textAlign: 'center',
-  },
-});

@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Pressable } from '@/components/gluestack/pressable';
 import { ThemedText } from '@/components/themed-text';
 import type { StoryOutlineSection } from '@/features/workspace/model/workbench-data';
 
@@ -38,6 +39,7 @@ export function OutlineSectionRow({
             accessibilityLabel={`编辑第 ${chapterNumber} 章第 ${index + 1} 节`}
             accessibilityRole="button"
             accessibilityState={{ disabled }}
+            className="data-[disabled=true]:opacity-100"
             disabled={disabled}
             hitSlop={8}
             onPress={() => onEdit(chapterNumber, index)}

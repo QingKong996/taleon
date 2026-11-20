@@ -1,11 +1,9 @@
 import { SymbolView } from 'expo-symbols';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-} from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Pressable } from '@/components/gluestack/pressable';
+import { Spinner } from '@/components/gluestack/spinner';
 import { ThemedText } from '@/components/themed-text';
 import { Layout, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -39,7 +37,7 @@ export function CreateStoryButton({
         creating && styles.disabled,
       ]}>
       {creating ? (
-        <ActivityIndicator color={theme.background} size="small" />
+        <Spinner color={theme.background} size="small" />
       ) : (
         <SymbolView
           name={{ android: 'add', ios: 'plus' }}

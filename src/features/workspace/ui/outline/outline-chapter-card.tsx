@@ -1,7 +1,8 @@
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Pressable } from '@/components/gluestack/pressable';
 import { Surface } from '@/components/ui/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Radius } from '@/constants/theme';
@@ -140,6 +141,7 @@ export function OutlineChapterCard({
                 accessibilityLabel={`编辑第 ${chapter.chapterNumber} 章`}
                 accessibilityRole="button"
                 accessibilityState={{ disabled }}
+                className="data-[disabled=true]:opacity-100"
                 disabled={disabled}
                 hitSlop={8}
                 onPress={() => onEditChapter(chapter.chapterNumber)}
